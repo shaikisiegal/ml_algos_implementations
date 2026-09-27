@@ -20,12 +20,20 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "Baby Log",
+      "shortName": "Baby Log",
+      "themeColor": "#FFF8F3",
+      "backgroundColor": "#FFF8F3"
     },
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker"
     ],
-    "scheme": "babylog"
+    "scheme": "babylog",
+    "experiments": {
+      "baseUrl": "/ml_algos_implementations"
+    }
   }
 }

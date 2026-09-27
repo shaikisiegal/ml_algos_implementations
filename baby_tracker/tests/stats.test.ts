@@ -127,3 +127,13 @@ test('describeEvent for breast sides and growth', () => {
   assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', breastTimer: { leftMs: 0, rightMs: 0 } })), 'Breastfeeding · in progress');
   assert.equal(describeEvent(ev({ type: 'growth', start: 0, weightKg: 4.2, headCm: 38 })), '4.2 kg · head 38 cm');
 });
+
+test('backup round-trip and validation', async () => {
+  const { parseBackup, serializeBackup } = await import('../src/lib/backup.ts');
+  const events = [ev({ type: 'diaper', start: at(27, 9), diaper: 'wet' })];
+  const back = parseBackup(serializeBackup({ profile: { name: 'Tom', birthDate: at(1, 0) }, events }));
+  assert.deepEqual(back.events, events);
+  assert.deepEqual(back.profile, { name: 'Tom', birthDate: at(1, 0) });
+  assert.throws(() => parseBackup('hello'), /not valid JSON/);
+  assert.throws(() => parseBackup('{"events":[{"id":"x","type":"bogus","start":1}]}'), /damaged/);
+});

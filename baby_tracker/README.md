@@ -43,7 +43,28 @@ the native picker. Bottle (formula / breast milk, ml with ± and presets), breas
 Not included (needs a native build, not possible in Expo Go): lock-screen widgets and an
 Apple Watch app.
 
-## Run it on your iPhone (no Mac needed)
+## Install on iPhone (web app — no App Store, no Mac, free)
+
+The app is published as an installable web app at
+**https://shaikisiegal.github.io/ml_algos_implementations/**
+
+1. Open that link in **Safari** on the iPhone.
+2. Tap **Share** (square with arrow) → **Add to Home Screen** → **Add**.
+3. Open it from the new 👶 icon. It runs full-screen like a normal app and works offline.
+
+Data is stored on the phone, inside the home-screen app. Use ⚙️ → **Export backup**
+now and then; **Restore a backup** (paste the text) moves data to another phone.
+
+### Publishing (one-time setup)
+
+`.github/workflows/baby-log-pages.yml` builds and deploys the web app on every push to
+`master` that touches `baby_tracker/`. Once: repo **Settings → Pages → Build and
+deployment → Source: GitHub Actions**. The base path `/ml_algos_implementations` is set in
+`app.json` (`experiments.baseUrl`) and `public/index.html`; change both if the repo is renamed.
+
+Build locally with `npm run build:web` (output in `dist/`).
+
+## Run it in Expo Go (development)
 
 1. Install **Expo Go** from the App Store on your iPhone.
 2. On a computer with [Node.js](https://nodejs.org) 20+:

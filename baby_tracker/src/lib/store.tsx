@@ -34,6 +34,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const loaded = useRef(false);
 
   useEffect(() => {
+    // Web: ask the browser not to evict our data under storage pressure.
+    if (typeof navigator !== 'undefined' && navigator.storage?.persist) navigator.storage.persist().catch(() => {});
     (async () => {
       try {
         const [rawEvents, rawProfile] = await Promise.all([
