@@ -1,23 +1,22 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { BreastTimerCard } from '../../components/BreastTimerCard';
 import { DayStrip, HourAxis } from '../../components/DayStrip';
 import { EventRow } from '../../components/EventRow';
+import { SYNC_STATUS_LABEL } from '../../components/SyncSection';
 import { SummaryChips } from '../../components/SummaryChips';
 import { describeEvent } from '../../lib/describe';
 import { successFeedback, tapFeedback } from '../../lib/feedback';
-import { eventsForDay, lastOfType, ongoingBreast, ongoingSleep, predictNextNap, summarizeDay } from '../../lib/stats';
+import { eventsForDay, lastOfType, ongoingSleep, predictNextNap, summarizeDay } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 import { tint, usePalette } from '../../lib/theme';
 import { MINUTE, formatAge, formatDuration, formatTime } from '../../lib/time';
-import { TYPE_META, type BabyEvent, type EventType, type FeedMethod } from '../../lib/types';
+import { TYPE_META, type BabyEvent, type EventType } from '../../lib/types';
 import { useNow } from '../../lib/useNow';
 
-type QuickKey = 'breast' | 'bottle' | Exclude<EventType, 'feed'>;
+type QuickKey = 'bottle' | Exclude<EventType, 'feed'>;
 
 const QUICK: { key: QuickKey; label: string; emoji: string; type: EventType }[] = [
-  { key: 'breast', label: 'הנקה', emoji: '🤱', type: 'feed' },
   { key: 'bottle', label: 'בקבוק', emoji: '🍼', type: 'feed' },
   { key: 'diaper', label: 'חיתול', emoji: '🧷', type: 'diaper' },
   { key: 'sleep', label: 'שינה', emoji: '😴', type: 'sleep' },
@@ -29,16 +28,15 @@ const QUICK: { key: QuickKey; label: string; emoji: string; type: EventType }[] 
 
 export default function HomeScreen() {
   const p = usePalette();
-  const { events, profile, addEvent, updateEvent, ready } = useStore();
+  const { events, profile, addEvent, updateEvent, ready, family, syncStatus } = useStore();
   const now = useNow();
 
   const sleeping = ongoingSleep(events);
-  const breast = ongoingBreast(events);
   const prediction = predictNextNap(events, now);
   const today = eventsForDay(events, now, now);
   const summary = summarizeDay(events, now, now);
 
-  const openForm = (params: { type?: EventType; id?: string; method?: FeedMethod }) =>
+  const openForm = (params: { type?: EventType; id?: string }) =>
     router.push({ pathname: '/event', params });
   const openEvent = (e: BabyEvent) => openForm({ id: e.id });
 
@@ -50,28 +48,17 @@ export default function HomeScreen() {
       else addEvent({ type: 'sleep', start: Date.now() });
       return;
     }
-    if (key === 'breast') {
-      // Opens a paused stopwatch; the card below starts the chosen side.
-      if (!breast) {
-        tapFeedback();
-        addEvent({ type: 'feed', method: 'breast', start: Date.now(), breastTimer: { leftMs: 0, rightMs: 0 } });
-      }
-      return;
-    }
-    if (key === 'bottle') return openForm({ type: 'feed', method: 'bottle' });
+    if (key === 'bottle') return openForm({ type: 'feed' });
     openForm({ type: key });
   };
 
   const onQuickLong = (key: QuickKey) => {
     tapFeedback();
-    if (key === 'breast' || key === 'bottle') openForm({ type: 'feed', method: key });
+    if (key === 'bottle') openForm({ type: 'feed' });
     else openForm({ type: key });
   };
 
-  const lastFeed = lastOfType(
-    events.filter((e) => !e.breastTimer),
-    'feed',
-  );
+  const lastFeed = lastOfType(events, 'feed');
   const lastDiaper = lastOfType(events, 'diaper');
   const lastSleep = lastOfType(events, 'sleep');
 
@@ -84,12 +71,13 @@ export default function HomeScreen() {
         <Text style={[styles.age, { color: p.muted }]}>
           {profile.birthDate ? `גיל: ${formatAge(profile.birthDate, now)}` : 'הקישו כדי להוסיף שם ותאריך לידה'}
         </Text>
+        {family ? <Text style={[styles.sync, { color: p.muted }]}>{SYNC_STATUS_LABEL[syncStatus]}</Text> : null}
       </Pressable>
 
       <View style={styles.quickGrid}>
         {QUICK.map((q) => {
           const color = p.types[q.type];
-          const active = (q.key === 'sleep' && !!sleeping) || (q.key === 'breast' && !!breast);
+          const active = q.key === 'sleep' && !!sleeping;
           const label = q.key === 'sleep' && sleeping ? 'התעוררות' : q.label;
           const emoji = q.key === 'sleep' && sleeping ? '🌅' : q.emoji;
           return (
@@ -118,7 +106,6 @@ export default function HomeScreen() {
       </View>
       <Text style={[styles.hint, { color: p.muted }]}>לחיצה ארוכה על כפתור — להזנת אירוע שכבר קרה.</Text>
 
-      {breast ? <BreastTimerCard event={breast} /> : null}
 
       {sleeping ? (
         <Pressable
@@ -224,6 +211,7 @@ const styles = StyleSheet.create({
   // writingDirection keeps a Latin-script name ("Tom") right-aligned in the RTL layout
   hello: { fontSize: 26, fontWeight: '800', writingDirection: 'rtl' },
   age: { fontSize: 15, marginTop: 2 },
+  sync: { fontSize: 12, marginTop: 2 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, rowGap: 12 },
   quick: { width: '25%', alignItems: 'center' },
   circle: {

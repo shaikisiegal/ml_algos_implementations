@@ -12,14 +12,11 @@ on the phone (no account, no server).
 Inspired by apps like Baby Daybook, kept simple and private.
 
 The interface is in **Hebrew, right-to-left** (`<html dir="rtl">` on web, `I18nManager.forceRTL` natively).
-Charts and the timeline keep time running left→right (00 → 24), and the breastfeeding
-Left/Right buttons stay on their physical sides.
+Charts and the timeline keep time running left→right (00 → 24).
 
 **Home**
-- Round quick-add buttons: 🤱 Breast · 🍼 Bottle · 🧷 Diaper · 😴 Sleep · 🛁 Bath ·
+- Round quick-add buttons: 🍼 Bottle · 🧷 Diaper · 😴 Sleep · 🛁 Bath ·
   💊 Medicine · 📏 Growth · 📝 Note. Long-press any of them to enter a past event by hand.
-- **Breastfeeding stopwatch**: tap Breast, then ▶ L / ▶ R. Switching sides pauses the
-  other one; "Finish & save" stores the minutes per side. It keeps running if the app is closed.
 - **Sleep** is a one-tap toggle (fall asleep / wake up) with a live "sleeping for…" banner.
 - **Predicted nap**: based on the average awake window over the last 3 days.
 - Today as a 24-hour strip, "time since last" feed/diaper/sleep, today's totals and list.
@@ -31,18 +28,29 @@ rhythms line up. Filter by type; tap anything to edit it.
 **Calendar**: month view with colored dots per event type; tap a day to review, add,
 edit or delete events.
 
-**Statistics**: daily charts for sleep, feeds, bottle ml, breastfeeding minutes and
+**Statistics**: daily charts for sleep, feeds, bottle ml and
 diapers over 7/14/30 days, with the average line (complete days only) and, for sleep,
 the recommended range for the baby's age. Tap a bar for details or view as a table.
 
 **Growth**: log weight, height and head size; latest values and a chart over time.
 
 **Add / edit form**: time defaults to now with `Now / -5m / -15m / -30m / -1h` chips or
-the native picker. Bottle (formula / breast milk, ml with ± and presets), breast
-(minutes per side), solids, diaper (wet / dirty / both / dry + poop color), sleep
+the native picker. Bottle (formula / breast milk, ml with ± and presets), diaper (wet / dirty / both / dry + poop color), sleep
 (start + wake-up), medicine (name + dose), growth, and a note on anything.
 
 **Profile** (⚙️): name, birth date, JSON backup export, delete all. Dark mode supported.
+
+**Sync between two phones** (⚙️ → סנכרון בין טלפונים): one phone creates a 16-character
+family code, the other joins with it; both then share one log live, and changes made
+offline upload when the connection returns. Uses Firebase Firestore — set up once:
+
+1. [console.firebase.google.com](https://console.firebase.google.com) → create a project (Analytics not needed).
+2. Build → Firestore Database → Create database (production mode).
+3. Firestore → Rules → paste [`firestore.rules`](firestore.rules) → Publish.
+4. Project settings → Your apps → Web app → copy the `firebaseConfig` values into
+   [`src/lib/firebaseConfig.ts`](src/lib/firebaseConfig.ts).
+
+Local testing against the emulator: build with `EXPO_PUBLIC_FIRESTORE_EMULATOR=127.0.0.1:8080`.
 
 Not included (needs a native build, not possible in Expo Go): lock-screen widgets and an
 Apple Watch app.

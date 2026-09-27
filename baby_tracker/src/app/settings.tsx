@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Chip } from '../components/Chip';
+import { SyncSection } from '../components/SyncSection';
 import { TimeField } from '../components/TimeField';
 import { parseBackup, serializeBackup } from '../lib/backup';
 import { confirm, successFeedback } from '../lib/feedback';
@@ -92,6 +93,9 @@ export default function SettingsScreen() {
       <Pressable onPress={save} style={[styles.saveBtn, { backgroundColor: p.accent }]}>
         <Text style={styles.saveText}>שמירה</Text>
       </Pressable>
+
+      <Text style={[styles.label, { color: p.muted, marginTop: 36 }]}>סנכרון בין טלפונים</Text>
+      <SyncSection />
 
       <Text style={[styles.label, { color: p.muted, marginTop: 36 }]}>נתונים</Text>
       <Text style={{ color: p.muted, marginBottom: 10 }}>

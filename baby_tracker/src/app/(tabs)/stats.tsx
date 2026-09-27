@@ -10,13 +10,12 @@ import { HOUR, addDays, daysBetween, formatDuration, shortDate, startOfDay } fro
 import type { EventType } from '../../lib/types';
 import { useNow } from '../../lib/useNow';
 
-type Metric = 'sleep' | 'feeds' | 'bottle' | 'breast' | 'diapers';
+type Metric = 'sleep' | 'feeds' | 'bottle' | 'diapers';
 
 const METRICS: { key: Metric; label: string; type: EventType; value: (s: DaySummary) => number; format: (v: number) => string; unit: string }[] = [
   { key: 'sleep', label: '😴 שינה', type: 'sleep', value: (s) => s.sleepMs / HOUR, format: (v) => formatDuration(v * HOUR), unit: 'שעות שינה ביום' },
   { key: 'feeds', label: '🍼 האכלות', type: 'feed', value: (s) => s.feeds, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'האכלות ביום' },
   { key: 'bottle', label: '🥛 מ״ל בבקבוק', type: 'feed', value: (s) => s.bottleMl, format: (v) => `${Math.round(v)} מ״ל`, unit: 'מ״ל בבקבוק ביום' },
-  { key: 'breast', label: '🤱 דקות הנקה', type: 'feed', value: (s) => s.breastMin, format: (v) => `${Math.round(v)} ד׳`, unit: 'דקות הנקה ביום' },
   { key: 'diapers', label: '🧷 חיתולים', type: 'diaper', value: (s) => s.diapers, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'חיתולים ביום' },
 ];
 
@@ -66,7 +65,7 @@ export default function StatsScreen() {
     let detail: string | undefined;
     if (metric === 'diapers') detail = `💧 ${s.wet} רטובים · 💩 ${s.dirty} קקי`;
     if (metric === 'sleep') detail = `${s.naps} ${s.naps === 1 ? 'שינה' : 'שינות'} התחילו`;
-    if (metric === 'feeds' && (s.bottleMl || s.breastMin)) detail = [s.bottleMl ? `${s.bottleMl} מ״ל` : '', s.breastMin ? `${s.breastMin} ד׳ הנקה` : ''].filter(Boolean).join(' · ');
+    if (metric === 'feeds' && s.bottleMl) detail = `${s.bottleMl} מ״ל`;
     return { label: String(dt.getDate()), title: shortDate(d.day), value: m.value(s), detail };
   });
 

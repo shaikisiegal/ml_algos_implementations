@@ -4,7 +4,6 @@ import type { BabyEvent, EventType } from './types.ts';
 export interface DaySummary {
   feeds: number;
   bottleMl: number;
-  breastMin: number;
   diapers: number;
   wet: number;
   dirty: number;
@@ -22,7 +21,7 @@ export function summarizeDay(events: BabyEvent[], day: number, now: number = Dat
   const from = startOfDay(day);
   const to = startOfNextDay(day);
   const s: DaySummary = {
-    feeds: 0, bottleMl: 0, breastMin: 0, diapers: 0, wet: 0, dirty: 0, sleepMs: 0, naps: 0, baths: 0,
+    feeds: 0, bottleMl: 0, diapers: 0, wet: 0, dirty: 0, sleepMs: 0, naps: 0, baths: 0,
   };
   for (const e of events) {
     if (e.type === 'sleep') {
@@ -37,7 +36,6 @@ export function summarizeDay(events: BabyEvent[], day: number, now: number = Dat
       case 'feed':
         s.feeds += 1;
         if (e.method === 'bottle' && e.amountMl) s.bottleMl += e.amountMl;
-        if (e.method === 'breast' && e.durationMin) s.breastMin += e.durationMin;
         break;
       case 'diaper':
         s.diapers += 1;
@@ -85,10 +83,6 @@ export function typesByDay(events: BabyEvent[], dayKeyFn: (t: number) => string)
     set.add(e.type);
   }
   return map;
-}
-
-export function ongoingBreast(events: BabyEvent[]): BabyEvent | undefined {
-  return events.find((e) => e.type === 'feed' && e.breastTimer);
 }
 
 /** Per-day summaries for the `days` calendar days ending on `lastDay` (oldest first). */

@@ -3,17 +3,7 @@ export type EventType = 'feed' | 'diaper' | 'sleep' | 'bath' | 'medicine' | 'not
 export type FeedMethod = 'bottle' | 'breast' | 'solids';
 export type MilkType = 'formula' | 'breastmilk';
 export type BreastSide = 'left' | 'right' | 'both';
-export type Side = 'left' | 'right';
 
-/** Live breastfeeding stopwatch. Present only while the session is in progress. */
-export interface BreastTimer {
-  leftMs: number;
-  rightMs: number;
-  /** Side currently ticking, if not paused. */
-  running?: Side;
-  /** When `running` started (epoch ms). */
-  since?: number;
-}
 export type DiaperKind = 'wet' | 'dirty' | 'mixed' | 'dry';
 export type StoolColor = 'yellow' | 'green' | 'brown' | 'black' | 'red' | 'white';
 
@@ -28,7 +18,7 @@ export interface BabyEvent {
   /** Sleep only: when the baby woke up. Missing = still sleeping. */
   end?: number;
 
-  // feed
+  // feed (the app logs bottles only; breast/solids fields remain for older entries)
   method?: FeedMethod;
   milk?: MilkType;
   amountMl?: number;
@@ -36,7 +26,6 @@ export interface BabyEvent {
   durationMin?: number;
   leftMin?: number;
   rightMin?: number;
-  breastTimer?: BreastTimer;
   food?: string;
 
   // diaper
