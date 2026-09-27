@@ -1,8 +1,19 @@
-export type EventType = 'feed' | 'diaper' | 'sleep' | 'bath' | 'medicine' | 'note';
+export type EventType = 'feed' | 'diaper' | 'sleep' | 'bath' | 'medicine' | 'note' | 'growth';
 
 export type FeedMethod = 'bottle' | 'breast' | 'solids';
 export type MilkType = 'formula' | 'breastmilk';
 export type BreastSide = 'left' | 'right' | 'both';
+export type Side = 'left' | 'right';
+
+/** Live breastfeeding stopwatch. Present only while the session is in progress. */
+export interface BreastTimer {
+  leftMs: number;
+  rightMs: number;
+  /** Side currently ticking, if not paused. */
+  running?: Side;
+  /** When `running` started (epoch ms). */
+  since?: number;
+}
 export type DiaperKind = 'wet' | 'dirty' | 'mixed' | 'dry';
 export type StoolColor = 'yellow' | 'green' | 'brown' | 'black' | 'red' | 'white';
 
@@ -23,6 +34,9 @@ export interface BabyEvent {
   amountMl?: number;
   side?: BreastSide;
   durationMin?: number;
+  leftMin?: number;
+  rightMin?: number;
+  breastTimer?: BreastTimer;
   food?: string;
 
   // diaper
@@ -32,6 +46,11 @@ export interface BabyEvent {
   // medicine
   medName?: string;
   dose?: string;
+
+  // growth
+  weightKg?: number;
+  heightCm?: number;
+  headCm?: number;
 
   note?: string;
   createdAt: number;
@@ -44,15 +63,17 @@ export interface BabyProfile {
   birthDate?: number;
 }
 
-export const EVENT_TYPES: EventType[] = ['feed', 'diaper', 'sleep', 'bath', 'medicine', 'note'];
+export const EVENT_TYPES: EventType[] = ['feed', 'diaper', 'sleep', 'bath', 'medicine', 'note', 'growth'];
 
-export const TYPE_META: Record<EventType, { label: string; emoji: string; color: string }> = {
-  feed: { label: 'Feed', emoji: '🍼', color: '#F59E0B' },
-  diaper: { label: 'Diaper', emoji: '🧷', color: '#10B981' },
-  sleep: { label: 'Sleep', emoji: '😴', color: '#6366F1' },
-  bath: { label: 'Bath', emoji: '🛁', color: '#0EA5E9' },
-  medicine: { label: 'Medicine', emoji: '💊', color: '#EF4444' },
-  note: { label: 'Note', emoji: '📝', color: '#8B5CF6' },
+/** Colors live in the theme (`usePalette().types`) so dark mode gets its own validated steps. */
+export const TYPE_META: Record<EventType, { label: string; emoji: string }> = {
+  feed: { label: 'Feed', emoji: '🍼' },
+  diaper: { label: 'Diaper', emoji: '🧷' },
+  sleep: { label: 'Sleep', emoji: '😴' },
+  bath: { label: 'Bath', emoji: '🛁' },
+  medicine: { label: 'Medicine', emoji: '💊' },
+  note: { label: 'Note', emoji: '📝' },
+  growth: { label: 'Growth', emoji: '📏' },
 };
 
 export const DIAPER_META: Record<DiaperKind, { label: string; emoji: string }> = {

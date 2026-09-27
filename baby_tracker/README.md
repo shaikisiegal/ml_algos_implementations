@@ -9,31 +9,39 @@ on the phone (no account, no server).
 
 ## Features
 
-**Today screen**
-- Big one-tap buttons: 🍼 Feed · 🧷 Diaper · 😴 Sleep · 🛁 Bath · 💊 Medicine · 📝 Note
-- Sleep is a toggle: tap once when the baby falls asleep and again on wake-up
-  (or tap the banner). Long-press it to enter a past nap by hand.
-- "How long ago" cards: last feed, last diaper, asleep/awake for how long
-- Today's totals (feeds, ml, breastfeeding minutes, wet/dirty diapers, sleep)
-  and a timeline. Tap any entry to edit it.
+Inspired by apps like Baby Daybook, kept simple and private.
 
-**Add / edit form** (designed for one hand at 3 am)
-- Time defaults to *now*; quick chips `Now / -5m / -15m / -30m / -1h`, or the
-  native date-time picker
-- Feed: bottle (formula / breast milk, amount in ml with ± buttons and
-  30–180 ml presets), breast (left / right / both + minutes), or solids
-- Diaper: wet / dirty / both / dry, optional poop color
-- Sleep: start and wake-up time (or "still sleeping"), duration shown live
-- Medicine: name + dose; every event can have a note
-- Delete from the edit screen
+**Home**
+- Round quick-add buttons: 🤱 Breast · 🍼 Bottle · 🧷 Diaper · 😴 Sleep · 🛁 Bath ·
+  💊 Medicine · 📏 Growth · 📝 Note. Long-press any of them to enter a past event by hand.
+- **Breastfeeding stopwatch**: tap Breast, then ▶ L / ▶ R. Switching sides pauses the
+  other one; "Finish & save" stores the minutes per side. It keeps running if the app is closed.
+- **Sleep** is a one-tap toggle (fall asleep / wake up) with a live "sleeping for…" banner.
+- **Predicted nap**: based on the average awake window over the last 3 days.
+- Today as a 24-hour strip, "time since last" feed/diaper/sleep, today's totals and list.
+- Age shown as "1m 9d (Week 6)".
 
-**Calendar**
-- Month view with colored dots per event type on each day
-- Tap a day to see its totals and all its events; tap an event to edit/delete it
-- "+ Add" logs an event on the selected (past) day
+**Timeline**: many days stacked as 24-hour rows (sleep bars + event icons), so daily
+rhythms line up. Filter by type; tap anything to edit it.
 
-**Profile** (⚙️ top-right): baby's name and birth date (shows age), JSON
-backup export via the share sheet, delete all data. Dark mode supported.
+**Calendar**: month view with colored dots per event type; tap a day to review, add,
+edit or delete events.
+
+**Statistics**: daily charts for sleep, feeds, bottle ml, breastfeeding minutes and
+diapers over 7/14/30 days, with the average line (complete days only) and, for sleep,
+the recommended range for the baby's age. Tap a bar for details or view as a table.
+
+**Growth**: log weight, height and head size; latest values and a chart over time.
+
+**Add / edit form**: time defaults to now with `Now / -5m / -15m / -30m / -1h` chips or
+the native picker. Bottle (formula / breast milk, ml with ± and presets), breast
+(minutes per side), solids, diaper (wet / dirty / both / dry + poop color), sleep
+(start + wake-up), medicine (name + dose), growth, and a note on anything.
+
+**Profile** (⚙️): name, birth date, JSON backup export, delete all. Dark mode supported.
+
+Not included (needs a native build, not possible in Expo Go): lock-screen widgets and an
+Apple Watch app.
 
 ## Run it on your iPhone (no Mac needed)
 
@@ -72,11 +80,14 @@ npm run web         # quick preview in the browser
 
 ```
 src/app/              screens (Expo Router)
-  (tabs)/index.tsx    Today
+  (tabs)/index.tsx    Home
+  (tabs)/timeline.tsx Timeline (multi-day 24h grid)
   (tabs)/calendar.tsx Calendar
+  (tabs)/stats.tsx    Statistics
+  (tabs)/growth.tsx   Growth
   event.tsx           add / edit form (modal)
   settings.tsx        baby profile + data
-src/components/       Chip, EventRow, SummaryChips, TimeField, QuickTimes
-src/lib/              types, storage (store.tsx), date + summary helpers
+src/components/       DayStrip, charts, BreastTimerCard, Chip, EventRow, TimeField, …
+src/lib/              types, storage (store.tsx), stats + nap prediction, breast timer, theme
 tests/                unit tests
 ```

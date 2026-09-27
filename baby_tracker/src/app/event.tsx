@@ -9,13 +9,13 @@ import { TimeField } from '../components/TimeField';
 import { confirm, successFeedback } from '../lib/feedback';
 import { useStore, type NewEvent } from '../lib/store';
 import { tint, usePalette } from '../lib/theme';
+import { sideFromMinutes } from '../lib/breast';
 import { formatDuration } from '../lib/time';
 import {
   DIAPER_META,
   EVENT_TYPES,
   STOOL_COLORS,
   TYPE_META,
-  type BreastSide,
   type DiaperKind,
   type EventType,
   type FeedMethod,
@@ -26,11 +26,13 @@ import {
 const ML_PRESETS = [30, 60, 90, 120, 150, 180];
 const MIN_PRESETS = [5, 10, 15, 20, 30];
 
-type Params = { id?: string; type?: EventType; at?: string };
+type Params = { id?: string; type?: EventType; at?: string; method?: FeedMethod };
 
-function defaultsFor(type: EventType, start: number): NewEvent {
+function defaultsFor(type: EventType, start: number, method: FeedMethod = 'bottle'): NewEvent {
   switch (type) {
     case 'feed':
+      if (method === 'breast') return { type, start, method, leftMin: 10, rightMin: 0 };
+      if (method === 'solids') return { type, start, method };
       return { type, start, method: 'bottle', milk: 'formula', amountMl: 90 };
     case 'diaper':
       return { type, start, diaper: 'wet' };
@@ -50,7 +52,14 @@ function normalize(d: NewEvent): NewEvent {
     case 'feed':
       out.method = d.method;
       if (d.method === 'bottle') Object.assign(out, { milk: d.milk, amountMl: d.amountMl });
-      if (d.method === 'breast') Object.assign(out, { side: d.side, durationMin: d.durationMin });
+      if (d.method === 'breast') {
+        if (d.breastTimer) out.breastTimer = d.breastTimer; // still running: keep the stopwatch
+        else if (d.leftMin !== undefined || d.rightMin !== undefined) {
+          const leftMin = d.leftMin ?? 0;
+          const rightMin = d.rightMin ?? 0;
+          Object.assign(out, { leftMin, rightMin, durationMin: leftMin + rightMin, side: sideFromMinutes(leftMin, rightMin) });
+        } else Object.assign(out, { side: d.side, durationMin: d.durationMin }); // older entries
+      }
       if (d.method === 'solids' && d.food?.trim()) out.food = d.food.trim();
       break;
     case 'diaper':
@@ -59,6 +68,9 @@ function normalize(d: NewEvent): NewEvent {
       break;
     case 'sleep':
       if (d.end !== undefined) out.end = d.end;
+      break;
+    case 'growth':
+      Object.assign(out, { weightKg: d.weightKg, heightCm: d.heightCm, headCm: d.headCm });
       break;
     case 'medicine':
       out.medName = d.medName?.trim();
@@ -83,7 +95,8 @@ export default function EventScreen() {
       const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = existing;
       return rest;
     }
-    return defaultsFor(initialType, initialStart);
+    const method = params.method && ['bottle', 'breast', 'solids'].includes(params.method) ? params.method : undefined;
+    return defaultsFor(initialType, initialStart, method);
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -104,6 +117,10 @@ export default function EventScreen() {
   const save = () => {
     if (draft.type === 'sleep' && draft.end !== undefined && draft.end < draft.start) {
       setError('Wake-up time must be after the sleep started.');
+      return;
+    }
+    if (draft.type === 'growth' && draft.weightKg === undefined && draft.heightCm === undefined && draft.headCm === undefined) {
+      setError('Enter at least one measurement.');
       return;
     }
     if (draft.type === 'medicine' && !draft.medName?.trim()) {
@@ -149,11 +166,11 @@ export default function EventScreen() {
                 accessibilityState={{ selected: sel }}
                 style={[
                   styles.typeBtn,
-                  { backgroundColor: sel ? tint(m.color, 0.2) : p.chip, borderColor: sel ? m.color : 'transparent' },
+                  { backgroundColor: sel ? tint(p.types[t], 0.2) : p.chip, borderColor: sel ? p.types[t] : 'transparent' },
                 ]}
               >
                 <Text style={styles.typeEmoji}>{m.emoji}</Text>
-                <Text style={[styles.typeLabel, { color: sel ? m.color : p.muted }]}>{m.label}</Text>
+                <Text style={[styles.typeLabel, { color: sel ? p.text : p.muted }]}>{m.label}</Text>
               </Pressable>
             );
           })}
@@ -168,6 +185,7 @@ export default function EventScreen() {
         {draft.type === 'feed' ? <FeedFields draft={draft} set={set} /> : null}
         {draft.type === 'diaper' ? <DiaperFields draft={draft} set={set} /> : null}
         {draft.type === 'medicine' ? <MedicineFields draft={draft} set={set} /> : null}
+        {draft.type === 'growth' ? <GrowthFields draft={draft} set={set} /> : null}
 
         <Section title={draft.type === 'note' ? 'Note' : 'Note (optional)'}>
           <TextInput
@@ -191,7 +209,7 @@ export default function EventScreen() {
         ) : null}
         <Pressable
           onPress={save}
-          style={({ pressed }) => [styles.saveBtn, { backgroundColor: meta.color }, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [styles.saveBtn, { backgroundColor: p.types[draft.type] }, pressed && { opacity: 0.8 }]}
         >
           <Text style={styles.saveText}>{isEdit ? 'Save changes' : `Save ${meta.label.toLowerCase()}`}</Text>
         </Pressable>
@@ -218,7 +236,7 @@ function ChipRow({ children }: { children: ReactNode }) {
 
 function FeedFields({ draft, set }: FieldProps) {
   const p = usePalette();
-  const color = TYPE_META.feed.color;
+  const color = usePalette().types.feed;
   const methods: { key: FeedMethod; label: string }[] = [
     { key: 'bottle', label: '🍼 Bottle' },
     { key: 'breast', label: '🤱 Breast' },
@@ -231,7 +249,7 @@ function FeedFields({ draft, set }: FieldProps) {
       <Section title="Type">
         <ChipRow>
           {methods.map((m) => (
-            <Chip key={m.key} big label={m.label} color={color} selected={draft.method === m.key} onPress={() => set({ method: m.key })} />
+            <Chip key={m.key} big label={m.label} color={color} selected={draft.method === m.key} onPress={() => set(m.key === 'breast' && draft.leftMin === undefined ? { method: m.key, leftMin: 10, rightMin: 0 } : { method: m.key })} />
           ))}
         </ChipRow>
       </Section>
@@ -270,27 +288,25 @@ function FeedFields({ draft, set }: FieldProps) {
 
       {draft.method === 'breast' ? (
         <>
-          <Section title="Side">
-            <ChipRow>
-              {(
-                [
-                  ['left', 'Left'],
-                  ['right', 'Right'],
-                  ['both', 'Both'],
-                ] as [BreastSide, string][]
-              ).map(([k, label]) => (
-                <Chip key={k} big label={label} color={color} selected={draft.side === k} onPress={() => set({ side: k })} />
-              ))}
-            </ChipRow>
-          </Section>
-          <Section title="Duration (minutes)">
-            <ChipRow>
-              {MIN_PRESETS.map((m) => (
-                <Chip key={m} label={`${m}`} color={color} selected={draft.durationMin === m} onPress={() => set({ durationMin: m })} />
-              ))}
-            </ChipRow>
-            <NumberInput value={draft.durationMin} onChange={(durationMin) => set({ durationMin })} placeholder="Other…" />
-          </Section>
+          {draft.breastTimer ? (
+            <Text style={[styles.duration, { color: p.muted }]}>⏱ The timer for this feed is still running — finish it from the Home screen.</Text>
+          ) : (
+            <Section title="Minutes per side">
+              <MinutesStepper label="Left" value={draft.leftMin ?? 0} onChange={(leftMin) => set({ leftMin })} />
+              <MinutesStepper label="Right" value={draft.rightMin ?? 0} onChange={(rightMin) => set({ rightMin })} />
+              <ChipRow>
+                {MIN_PRESETS.map((m) => (
+                  <Chip
+                    key={m}
+                    label={`${m} min`}
+                    color={color}
+                    selected={(draft.leftMin ?? 0) + (draft.rightMin ?? 0) === m}
+                    onPress={() => set({ leftMin: m, rightMin: 0 })}
+                  />
+                ))}
+              </ChipRow>
+            </Section>
+          )}
         </>
       ) : null}
 
@@ -310,7 +326,7 @@ function FeedFields({ draft, set }: FieldProps) {
 }
 
 function DiaperFields({ draft, set }: FieldProps) {
-  const color = TYPE_META.diaper.color;
+  const color = usePalette().types.diaper;
   const showColor = draft.diaper === 'dirty' || draft.diaper === 'mixed';
   return (
     <>
@@ -350,7 +366,7 @@ function DiaperFields({ draft, set }: FieldProps) {
 
 function SleepFields({ draft, set }: FieldProps) {
   const p = usePalette();
-  const color = TYPE_META.sleep.color;
+  const color = usePalette().types.sleep;
   const ongoing = draft.end === undefined;
   return (
     <Section title="Woke up">
@@ -363,7 +379,7 @@ function SleepFields({ draft, set }: FieldProps) {
           <TimeField value={draft.end!} onChange={(end) => set({ end })} />
           <QuickTimes onPick={(end) => set({ end })} />
           <Text style={[styles.duration, { color: p.text }]}>
-            Duration: <Text style={{ color, fontWeight: '800' }}>{formatDuration(draft.end! - draft.start)}</Text>
+            Duration: <Text style={{ fontWeight: '800' }}>{formatDuration(draft.end! - draft.start)}</Text>
           </Text>
         </View>
       ) : null}
@@ -394,15 +410,76 @@ function MedicineFields({ draft, set }: FieldProps) {
   );
 }
 
-function StepBtn({ label, onPress }: { label: string; onPress: () => void }) {
-  const color = TYPE_META.feed.color;
+function MinutesStepper({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
+  const p = usePalette();
+  return (
+    <View style={styles.minRow}>
+      <Text style={[styles.minLabel, { color: p.text }]}>{label}</Text>
+      <StepBtn label="−" small onPress={() => onChange(Math.max(0, value - 1))} />
+      <Text style={[styles.minValue, { color: p.text }]}>{value} min</Text>
+      <StepBtn label="+" small onPress={() => onChange(value + 1)} />
+    </View>
+  );
+}
+
+function GrowthFields({ draft, set }: FieldProps) {
+  return (
+    <Section title="Measurements">
+      <DecimalField label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => set({ weightKg })} placeholder="e.g. 4.25" />
+      <DecimalField label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => set({ heightCm })} placeholder="e.g. 55" />
+      <DecimalField label="Head" unit="cm" value={draft.headCm} onChange={(headCm) => set({ headCm })} placeholder="e.g. 37.5" />
+    </Section>
+  );
+}
+
+function DecimalField({
+  label,
+  unit,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  unit: string;
+  value?: number;
+  onChange: (n?: number) => void;
+  placeholder: string;
+}) {
+  const p = usePalette();
+  // Keep the raw text so "4." or "4,2" can be typed; commit parsed numbers.
+  const [text, setText] = useState(value !== undefined ? String(value) : '');
+  return (
+    <View style={styles.minRow}>
+      <Text style={[styles.minLabel, { color: p.text }]}>{label}</Text>
+      <TextInput
+        value={text}
+        onChangeText={(t) => {
+          const clean = t.replace(',', '.').replace(/[^0-9.]/g, '');
+          setText(clean);
+          const n = parseFloat(clean);
+          onChange(Number.isNaN(n) ? undefined : n);
+        }}
+        keyboardType="decimal-pad"
+        placeholder={placeholder}
+        placeholderTextColor={p.muted}
+        accessibilityLabel={label}
+        style={[styles.input, styles.flex, { backgroundColor: p.card, borderColor: p.border, color: p.text }]}
+      />
+      <Text style={[styles.unit, { color: p.muted }]}>{unit}</Text>
+    </View>
+  );
+}
+
+function StepBtn({ label, onPress, small }: { label: string; onPress: () => void; small?: boolean }) {
+  const p = usePalette();
+  const color = p.types.feed;
   return (
     <Pressable
       onPress={onPress}
       accessibilityLabel={label === '+' ? 'Increase' : 'Decrease'}
-      style={({ pressed }) => [styles.stepBtn, { backgroundColor: tint(color, 0.18) }, pressed && { opacity: 0.6 }]}
+      style={({ pressed }) => [styles.stepBtn, small && styles.stepSmall, { backgroundColor: tint(color, 0.18) }, pressed && { opacity: 0.6 }]}
     >
-      <Text style={[styles.stepText, { color }]}>{label}</Text>
+      <Text style={[styles.stepText, small && styles.stepSmallText, { color: p.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -428,8 +505,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, paddingBottom: 24 },
-  typeRow: { flexDirection: 'row', gap: 6 },
-  typeBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, borderWidth: 2 },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  typeBtn: { width: '23.5%', flexGrow: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, borderWidth: 2 },
   typeEmoji: { fontSize: 22 },
   typeLabel: { fontSize: 11, fontWeight: '700', marginTop: 2 },
   section: { marginTop: 20 },
@@ -439,6 +516,12 @@ const styles = StyleSheet.create({
   half: { flexBasis: '47%' },
   stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 12 },
   stepBtn: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  stepSmall: { width: 40, height: 40, borderRadius: 20 },
+  stepSmallText: { fontSize: 22, lineHeight: 26 },
+  minRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  minLabel: { width: 56, fontSize: 16, fontWeight: '700' },
+  minValue: { minWidth: 70, textAlign: 'center', fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  unit: { width: 28, fontSize: 15 },
   stepText: { fontSize: 30, fontWeight: '700', lineHeight: 34 },
   amountBox: { flexDirection: 'row', alignItems: 'baseline', minWidth: 110, justifyContent: 'center' },
   amount: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] },

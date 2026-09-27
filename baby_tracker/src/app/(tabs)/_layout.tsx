@@ -24,11 +24,23 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Today', tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
+        options={{ title: 'Home', tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="timeline"
+        options={{ title: 'Timeline', tabBarIcon: ({ focused }) => <TabIcon emoji="🕒" focused={focused} /> }}
       />
       <Tabs.Screen
         name="calendar"
         options={{ title: 'Calendar', tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{ title: 'Statistics', tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="growth"
+        options={{ title: 'Growth', tabBarIcon: ({ focused }) => <TabIcon emoji="🌱" focused={focused} /> }}
       />
     </Tabs>
   );

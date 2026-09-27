@@ -19,7 +19,7 @@ export function EventRow({ event, onPress, now }: { event: BabyEvent; onPress: (
       onPress={onPress}
       style={({ pressed }) => [styles.row, { backgroundColor: p.card, borderColor: p.border }, pressed && { opacity: 0.7 }]}
     >
-      <View style={[styles.icon, { backgroundColor: tint(meta.color, 0.16) }]}>
+      <View style={[styles.icon, { backgroundColor: tint(p.types[event.type], 0.16) }]}>
         <Text style={styles.emoji}>{meta.emoji}</Text>
       </View>
       <View style={styles.body}>

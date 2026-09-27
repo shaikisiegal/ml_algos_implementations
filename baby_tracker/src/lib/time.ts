@@ -63,19 +63,35 @@ export function formatAgo(t: number, now: number = Date.now()): string {
   return `${formatDuration(diff)} ago`;
 }
 
-/** "5 days", "3 weeks", "2 months" — used for the baby's age. */
+/** Whole days between two dates (calendar days, DST-safe). */
+export function daysBetween(from: number, to: number): number {
+  return Math.round((startOfDay(to) - startOfDay(from)) / DAY);
+}
+
+/** Baby age like "2m 20d (Week 11)" or "12d (Week 2)". Week 1 = first 7 days of life. */
 export function formatAge(birth: number, now: number = Date.now()): string {
-  const days = Math.floor((startOfDay(now) - startOfDay(birth)) / DAY);
+  const days = daysBetween(birth, now);
   if (days < 0) return '';
-  if (days < 14) return `${days} day${days === 1 ? '' : 's'} old`;
-  if (days < 90) {
-    const w = Math.floor(days / 7);
-    const d = days % 7;
-    return `${w} weeks${d ? ` ${d}d` : ''} old`;
-  }
   const b = new Date(birth);
   const n = new Date(now);
   let months = (n.getFullYear() - b.getFullYear()) * 12 + n.getMonth() - b.getMonth();
   if (n.getDate() < b.getDate()) months -= 1;
-  return `${months} months old`;
+  const monthAnchor = new Date(b.getFullYear(), b.getMonth() + months, b.getDate()).getTime();
+  const restDays = daysBetween(monthAnchor, now);
+  const week = Math.floor(days / 7) + 1;
+  const main = months > 0 ? `${months}m ${restDays}d` : `${days}d`;
+  return months >= 24 ? `${Math.floor(months / 12)}y ${months % 12}m` : `${main} (Week ${week})`;
+}
+
+/** "Mon 01" style short label for day rows. */
+export function shortDay(t: number): { weekday: string; date: string } {
+  const d = new Date(t);
+  return { weekday: WEEKDAYS[d.getDay()], date: String(d.getDate()).padStart(2, '0') };
+}
+
+/** Add `n` calendar days (DST-safe). */
+export function addDays(t: number, n: number): number {
+  const d = new Date(startOfDay(t));
+  d.setDate(d.getDate() + n);
+  return d.getTime();
 }

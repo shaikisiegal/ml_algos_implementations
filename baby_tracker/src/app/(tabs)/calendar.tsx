@@ -122,7 +122,7 @@ export default function CalendarScreen() {
                   {types
                     ? EVENT_TYPES.filter((t) => types.has(t))
                         .slice(0, 4)
-                        .map((t) => <View key={t} style={[styles.dot, { backgroundColor: TYPE_META[t].color }]} />)
+                        .map((t) => <View key={t} style={[styles.dot, { backgroundColor: p.types[t] }]} />)
                     : null}
                 </View>
               </Pressable>

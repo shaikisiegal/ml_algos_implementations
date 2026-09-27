@@ -86,3 +86,67 @@ export function typesByDay(events: BabyEvent[], dayKeyFn: (t: number) => string)
   }
   return map;
 }
+
+export function ongoingBreast(events: BabyEvent[]): BabyEvent | undefined {
+  return events.find((e) => e.type === 'feed' && e.breastTimer);
+}
+
+/** Per-day summaries for the `days` calendar days ending on `lastDay` (oldest first). */
+export function dailySeries(events: BabyEvent[], lastDay: number, days: number, now: number = Date.now()) {
+  const out: { day: number; summary: DaySummary }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(startOfDay(lastDay));
+    d.setDate(d.getDate() - i);
+    out.push({ day: d.getTime(), summary: summarizeDay(events, d.getTime(), now) });
+  }
+  return out;
+}
+
+export interface NapPrediction {
+  /** Predicted time the next sleep starts. */
+  at: number;
+  /** Average awake window used for the prediction. */
+  windowMs: number;
+  samples: number;
+}
+
+const MIN_WINDOW = 15 * 60_000;
+const MAX_WINDOW = 6 * 3_600_000;
+const LOOKBACK = 3 * 24 * 3_600_000;
+
+/**
+ * Rough "next nap" estimate: the average awake window (sleep end → next sleep
+ * start) over the last 3 days, added to the last wake-up. Needs at least 3
+ * windows; returns undefined while the baby is asleep.
+ */
+export function predictNextNap(events: BabyEvent[], now: number = Date.now()): NapPrediction | undefined {
+  const sleeps = events
+    .filter((e) => e.type === 'sleep' && e.start >= now - LOOKBACK)
+    .sort((a, b) => a.start - b.start);
+  if (sleeps.length === 0 || sleeps[sleeps.length - 1].end === undefined) return undefined;
+  const windows: number[] = [];
+  for (let i = 1; i < sleeps.length; i++) {
+    const prevEnd = sleeps[i - 1].end;
+    if (prevEnd === undefined) continue;
+    const w = sleeps[i].start - prevEnd;
+    if (w >= MIN_WINDOW && w <= MAX_WINDOW) windows.push(w);
+  }
+  if (windows.length < 3) return undefined;
+  const windowMs = windows.reduce((a, b) => a + b, 0) / windows.length;
+  return { at: sleeps[sleeps.length - 1].end! + windowMs, windowMs, samples: windows.length };
+}
+
+/** Recommended total sleep per 24h by age (National Sleep Foundation ranges), in hours. */
+export function recommendedSleepHours(ageDays: number): [number, number] {
+  if (ageDays < 4 * 30) return [14, 17];
+  if (ageDays < 365) return [12, 15];
+  if (ageDays < 3 * 365) return [11, 14];
+  return [10, 13];
+}
+
+/** Latest known value of each growth measurement. */
+export function latestGrowth(events: BabyEvent[]) {
+  const growth = events.filter((e) => e.type === 'growth').sort((a, b) => b.start - a.start);
+  const pick = (k: 'weightKg' | 'heightCm' | 'headCm') => growth.find((e) => e[k] !== undefined);
+  return { weight: pick('weightKg'), height: pick('heightCm'), head: pick('headCm'), count: growth.length };
+}

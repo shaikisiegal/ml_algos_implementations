@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { finishTimer, formatClock, startSide, timerElapsed, toggleSide } from '../src/lib/breast.ts';
 import { describeEvent } from '../src/lib/describe.ts';
-import { eventsForDay, lastOfType, ongoingSleep, summarizeDay } from '../src/lib/stats.ts';
+import { dailySeries, eventsForDay, lastOfType, ongoingSleep, predictNextNap, recommendedSleepHours, summarizeDay } from '../src/lib/stats.ts';
 import { HOUR, MINUTE, dayKey, formatAge, formatDuration, startOfNextDay } from '../src/lib/time.ts';
 import type { BabyEvent } from '../src/lib/types.ts';
 
@@ -23,8 +24,10 @@ test('startOfNextDay / dayKey', () => {
 });
 
 test('formatAge', () => {
-  assert.equal(formatAge(at(20, 8), at(27, 23)), '7 days old');
-  assert.equal(formatAge(at(1, 8), at(27, 8)), '3 weeks 5d old');
+  assert.equal(formatAge(at(20, 8), at(27, 23)), '7d (Week 2)');
+  assert.equal(formatAge(at(27, 8), at(27, 9)), '0d (Week 1)');
+  // born 7 Jul → 27 Sep = 2 months 20 days, day 82 → week 12
+  assert.equal(formatAge(new Date(2026, 6, 7).getTime(), at(27, 9)), '2m 20d (Week 12)');
 });
 
 test('summarizeDay totals feeds, diapers and splits overnight sleep', () => {
@@ -75,4 +78,52 @@ test('describeEvent', () => {
   assert.equal(describeEvent(ev({ type: 'diaper', start: 0, diaper: 'dirty', color: 'yellow' })), '💩 Dirty · yellow');
   assert.equal(describeEvent(ev({ type: 'sleep', start: 0, end: 90 * MINUTE })), 'Slept 1h 30m');
   assert.equal(describeEvent(ev({ type: 'medicine', start: 0, medName: 'Vitamin D', dose: '1 drop' })), 'Vitamin D · 1 drop');
+});
+
+test('breast timer: start, switch sides, pause, finish', () => {
+  const t0 = at(27, 10);
+  let t = startSide(undefined, 'left', t0);
+  assert.deepEqual(timerElapsed(t, t0 + 5 * MINUTE), { left: 5 * MINUTE, right: 0, total: 5 * MINUTE });
+  t = toggleSide(t, 'right', t0 + 7 * MINUTE); // switch: left banks 7m
+  t = toggleSide(t, 'right', t0 + 10 * MINUTE); // pause right at 3m
+  assert.equal(t.running, undefined);
+  assert.deepEqual(timerElapsed(t, t0 + 60 * MINUTE), { left: 7 * MINUTE, right: 3 * MINUTE, total: 10 * MINUTE });
+  assert.deepEqual(finishTimer(t, t0 + 60 * MINUTE), { leftMin: 7, rightMin: 3, durationMin: 10, side: 'both' });
+  assert.equal(formatClock(7 * MINUTE + 12_000), '07:12');
+  assert.equal(formatClock(HOUR + 2 * MINUTE + 5_000), '1:02:05');
+});
+
+test('predictNextNap averages recent awake windows', () => {
+  const sleeps = [
+    ev({ type: 'sleep', start: at(27, 6), end: at(27, 7) }),
+    ev({ type: 'sleep', start: at(27, 8, 30), end: at(27, 9) }), // 1.5h window
+    ev({ type: 'sleep', start: at(27, 10, 30), end: at(27, 11) }), // 1.5h
+    ev({ type: 'sleep', start: at(27, 13), end: at(27, 14) }), // 2h
+  ];
+  const pred = predictNextNap(sleeps, at(27, 14, 30));
+  assert.ok(pred);
+  assert.equal(pred.samples, 3);
+  assert.equal(pred.windowMs, (5 / 3) * HOUR);
+  assert.equal(pred.at, at(27, 14) + (5 / 3) * HOUR);
+  // no prediction while asleep, or with too little data
+  assert.equal(predictNextNap([...sleeps, ev({ type: 'sleep', start: at(27, 15) })], at(27, 16)), undefined);
+  assert.equal(predictNextNap(sleeps.slice(0, 3), at(27, 14, 30)), undefined);
+});
+
+test('dailySeries returns oldest-first days ending on lastDay', () => {
+  const events = [ev({ type: 'diaper', start: at(26, 9), diaper: 'wet' })];
+  const series = dailySeries(events, at(27, 12), 3, at(27, 12));
+  assert.deepEqual(series.map((d) => dayKey(d.day)), ['2026-09-25', '2026-09-26', '2026-09-27']);
+  assert.deepEqual(series.map((d) => d.summary.diapers), [0, 1, 0]);
+});
+
+test('recommendedSleepHours by age', () => {
+  assert.deepEqual(recommendedSleepHours(30), [14, 17]);
+  assert.deepEqual(recommendedSleepHours(200), [12, 15]);
+});
+
+test('describeEvent for breast sides and growth', () => {
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', leftMin: 7, rightMin: 3 })), 'Breast · L 7m · R 3m');
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', breastTimer: { leftMs: 0, rightMs: 0 } })), 'Breastfeeding · in progress');
+  assert.equal(describeEvent(ev({ type: 'growth', start: 0, weightKg: 4.2, headCm: 38 })), '4.2 kg · head 38 cm');
 });

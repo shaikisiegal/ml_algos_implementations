@@ -31,7 +31,7 @@ export function Chip({ label, selected, color, onPress, big, style }: Props) {
         style,
       ]}
     >
-      <Text style={[styles.label, big && styles.bigLabel, { color: selected ? c : p.text }]}>{label}</Text>
+      <Text style={[styles.label, big && styles.bigLabel, { color: p.text }, selected && styles.selectedLabel]}>{label}</Text>
     </Pressable>
   );
 }
@@ -48,4 +48,5 @@ const styles = StyleSheet.create({
   big: { paddingVertical: 16, borderRadius: 16, flexGrow: 1, flexBasis: 0 },
   label: { fontSize: 15, fontWeight: '600' },
   bigLabel: { fontSize: 17 },
+  selectedLabel: { fontWeight: '800' },
 });

@@ -14,7 +14,13 @@ export function describeEvent(e: BabyEvent, now: number = Date.now()): string {
         return parts.join(' · ');
       }
       if (e.method === 'breast') {
+        if (e.breastTimer) return 'Breastfeeding · in progress';
         const parts = ['Breast'];
+        if (e.leftMin === 0 && e.rightMin === 0) return 'Breast · <1 min';
+        if (e.leftMin || e.rightMin) {
+          parts.push(`L ${e.leftMin ?? 0}m · R ${e.rightMin ?? 0}m`);
+          return parts.join(' · ');
+        }
         if (e.side) parts.push(SIDE_LABEL[e.side]);
         if (e.durationMin) parts.push(`${e.durationMin} min`);
         return parts.join(' · ');
@@ -36,6 +42,14 @@ export function describeEvent(e: BabyEvent, now: number = Date.now()): string {
       return [e.medName || 'Medicine', e.dose].filter(Boolean).join(' · ');
     case 'bath':
       return 'Bath';
+    case 'growth': {
+      const parts = [
+        e.weightKg !== undefined ? `${e.weightKg} kg` : '',
+        e.heightCm !== undefined ? `${e.heightCm} cm` : '',
+        e.headCm !== undefined ? `head ${e.headCm} cm` : '',
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : 'Growth';
+    }
     case 'note':
       return e.note ? e.note.split('\n')[0] : TYPE_META.note.label;
   }
