@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Baby Log",
+    "slug": "baby-log",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.babylog.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "Baby Log",
+      "shortName": "Baby Log",
+      "themeColor": "#FFF8F3",
+      "backgroundColor": "#FFF8F3"
+    },
+    "plugins": [
+      "expo-router",
+      "@react-native-community/datetimepicker"
+    ],
+    "scheme": "babylog",
+    "experiments": {
+      "baseUrl": "/ml_algos_implementations"
+    }
+  }
+}
