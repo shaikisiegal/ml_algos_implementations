@@ -27,15 +27,15 @@ export default function SettingsScreen() {
   const exportData = async () => {
     const text = serializeBackup({ profile, events });
     if (Platform.OS !== 'web') {
-      Share.share({ title: 'Baby Log backup', message: text }).catch(() => {});
+      Share.share({ title: 'גיבוי Baby Log', message: text }).catch(() => {});
       return;
     }
     // Web: share sheet where available (iPhone), otherwise download a file.
     const name = `baby-log-backup-${new Date().toISOString().slice(0, 10)}.json`;
     try {
       const file = new File([text], name, { type: 'application/json' });
-      if (navigator.canShare?.({ files: [file] })) return await navigator.share({ files: [file], title: 'Baby Log backup' });
-      if (navigator.share) return await navigator.share({ title: 'Baby Log backup', text });
+      if (navigator.canShare?.({ files: [file] })) return await navigator.share({ files: [file], title: 'גיבוי Baby Log' });
+      if (navigator.share) return await navigator.share({ title: 'גיבוי Baby Log', text });
     } catch (err) {
       if ((err as Error).name === 'AbortError') return; // user closed the share sheet
     }
@@ -50,9 +50,9 @@ export default function SettingsScreen() {
     try {
       const backup = parseBackup(importText);
       confirm(
-        'Replace all data?',
-        `This replaces the ${events.length} events on this device with ${backup.events.length} events from the backup.`,
-        'Replace',
+        'להחליף את כל הנתונים?',
+        `${events.length} האירועים במכשיר יוחלפו ב-${backup.events.length} אירועים מהגיבוי.`,
+        'החלפה',
         () => {
           replaceAll(backup.events);
           if (backup.profile) {
@@ -61,7 +61,7 @@ export default function SettingsScreen() {
             setBirthDate(backup.profile.birthDate);
           }
           setImportText('');
-          setImportMsg({ ok: true, text: `Imported ${backup.events.length} ${backup.events.length === 1 ? 'event' : 'events'}.` });
+          setImportMsg({ ok: true, text: `יובאו ${backup.events.length} אירועים.` });
           successFeedback();
         },
       );
@@ -74,10 +74,10 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: p.bg }} contentContainerStyle={styles.content}>
-      <Text style={[styles.label, { color: p.muted }]}>BABY'S NAME</Text>
-      <TextInput value={name} onChangeText={setName} placeholder="e.g. Noa" placeholderTextColor={p.muted} style={inputStyle} />
+      <Text style={[styles.label, { color: p.muted }]}>שם התינוק/ת</Text>
+      <TextInput value={name} onChangeText={setName} placeholder="למשל: נועה" placeholderTextColor={p.muted} style={inputStyle} />
 
-      <Text style={[styles.label, { color: p.muted }]}>BIRTH DATE</Text>
+      <Text style={[styles.label, { color: p.muted }]}>תאריך לידה</Text>
       {birthDate !== undefined ? (
         <View style={{ gap: 8 }}>
           <TimeField mode="date" value={birthDate} onChange={setBirthDate} />
@@ -85,33 +85,33 @@ export default function SettingsScreen() {
         </View>
       ) : (
         <View style={{ flexDirection: 'row' }}>
-          <Chip label="Set birth date" onPress={() => setBirthDate(Date.now())} />
+          <Chip label="הוספת תאריך לידה" onPress={() => setBirthDate(Date.now())} />
         </View>
       )}
 
       <Pressable onPress={save} style={[styles.saveBtn, { backgroundColor: p.accent }]}>
-        <Text style={styles.saveText}>Save</Text>
+        <Text style={styles.saveText}>שמירה</Text>
       </Pressable>
 
-      <Text style={[styles.label, { color: p.muted, marginTop: 36 }]}>DATA</Text>
+      <Text style={[styles.label, { color: p.muted, marginTop: 36 }]}>נתונים</Text>
       <Text style={{ color: p.muted, marginBottom: 10 }}>
-        {events.length} {events.length === 1 ? 'event' : 'events'} saved on this device. Export a backup regularly (save it to Files, Notes, WhatsApp…) —
-        it's also how you move your data to another phone.
+        {events.length} אירועים שמורים במכשיר הזה. כדאי לייצא גיבוי מדי פעם (לשמור בקבצים, בפתקים, בוואטסאפ…) —
+        כך גם מעבירים את הנתונים לטלפון אחר.
       </Text>
       <Pressable onPress={exportData} style={[styles.secondaryBtn, { borderColor: p.border, backgroundColor: p.card }]}>
-        <Text style={[styles.secondaryText, { color: p.text }]}>Export backup</Text>
+        <Text style={[styles.secondaryText, { color: p.text }]}>ייצוא גיבוי</Text>
       </Pressable>
-      <Text style={[styles.label, { color: p.muted }]}>RESTORE A BACKUP</Text>
+      <Text style={[styles.label, { color: p.muted }]}>שחזור מגיבוי</Text>
       <TextInput
         value={importText}
         onChangeText={(t) => {
           setImportText(t);
           setImportMsg(null);
         }}
-        placeholder="Paste the backup text here"
+        placeholder="הדביקו כאן את טקסט הגיבוי"
         placeholderTextColor={p.muted}
         multiline
-        accessibilityLabel="Backup text"
+        accessibilityLabel="טקסט הגיבוי"
         style={[inputStyle, styles.importBox]}
       />
       {importMsg ? (
@@ -122,19 +122,19 @@ export default function SettingsScreen() {
         disabled={!importText.trim()}
         style={[styles.secondaryBtn, { borderColor: p.border, backgroundColor: p.card, marginTop: 10, opacity: importText.trim() ? 1 : 0.5 }]}
       >
-        <Text style={[styles.secondaryText, { color: p.text }]}>Import backup</Text>
+        <Text style={[styles.secondaryText, { color: p.text }]}>ייבוא גיבוי</Text>
       </Pressable>
 
       <Pressable
         onPress={() =>
-          confirm('Delete all events?', `This removes all ${events.length} events from this phone.`, 'Delete all', () => {
+          confirm('למחוק את כל האירועים?', `כל ${events.length} האירועים יימחקו מהמכשיר הזה.`, 'מחיקת הכל', () => {
             replaceAll([]);
             router.back();
           })
         }
         style={[styles.secondaryBtn, { borderColor: p.danger, marginTop: 10 }]}
       >
-        <Text style={[styles.secondaryText, { color: p.danger }]}>Delete all events</Text>
+        <Text style={[styles.secondaryText, { color: p.danger }]}>מחיקת כל האירועים</Text>
       </Pressable>
     </ScrollView>
   );
@@ -142,8 +142,8 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
-  label: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginTop: 20, marginBottom: 8 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, fontSize: 17 },
+  label: { fontSize: 12, fontWeight: '700', marginTop: 20, marginBottom: 8 },
+  input: { writingDirection: 'rtl', borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, fontSize: 17 },
   saveBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
   saveText: { color: '#fff', fontSize: 17, fontWeight: '800' },
   importBox: { minHeight: 80, fontSize: 13, textAlignVertical: 'top' },

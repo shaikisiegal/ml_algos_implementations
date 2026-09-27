@@ -11,6 +11,10 @@ on the phone (no account, no server).
 
 Inspired by apps like Baby Daybook, kept simple and private.
 
+The interface is in **Hebrew, right-to-left** (`<html dir="rtl">` on web, `I18nManager.forceRTL` natively).
+Charts and the timeline keep time running left→right (00 → 24), and the breastfeeding
+Left/Right buttons stay on their physical sides.
+
 **Home**
 - Round quick-add buttons: 🤱 Breast · 🍼 Bottle · 🧷 Diaper · 😴 Sleep · 🛁 Bath ·
   💊 Medicine · 📏 Growth · 📝 Note. Long-press any of them to enter a past event by hand.

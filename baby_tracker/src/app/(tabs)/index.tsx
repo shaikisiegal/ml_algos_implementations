@@ -17,14 +17,14 @@ import { useNow } from '../../lib/useNow';
 type QuickKey = 'breast' | 'bottle' | Exclude<EventType, 'feed'>;
 
 const QUICK: { key: QuickKey; label: string; emoji: string; type: EventType }[] = [
-  { key: 'breast', label: 'Breast', emoji: '🤱', type: 'feed' },
-  { key: 'bottle', label: 'Bottle', emoji: '🍼', type: 'feed' },
-  { key: 'diaper', label: 'Diaper', emoji: '🧷', type: 'diaper' },
-  { key: 'sleep', label: 'Sleep', emoji: '😴', type: 'sleep' },
-  { key: 'bath', label: 'Bath', emoji: '🛁', type: 'bath' },
-  { key: 'medicine', label: 'Medicine', emoji: '💊', type: 'medicine' },
-  { key: 'growth', label: 'Growth', emoji: '📏', type: 'growth' },
-  { key: 'note', label: 'Note', emoji: '📝', type: 'note' },
+  { key: 'breast', label: 'הנקה', emoji: '🤱', type: 'feed' },
+  { key: 'bottle', label: 'בקבוק', emoji: '🍼', type: 'feed' },
+  { key: 'diaper', label: 'חיתול', emoji: '🧷', type: 'diaper' },
+  { key: 'sleep', label: 'שינה', emoji: '😴', type: 'sleep' },
+  { key: 'bath', label: 'מקלחת', emoji: '🛁', type: 'bath' },
+  { key: 'medicine', label: 'תרופה', emoji: '💊', type: 'medicine' },
+  { key: 'growth', label: 'גדילה', emoji: '📏', type: 'growth' },
+  { key: 'note', label: 'הערה', emoji: '📝', type: 'note' },
 ];
 
 export default function HomeScreen() {
@@ -80,9 +80,9 @@ export default function HomeScreen() {
   return (
     <ScrollView style={{ backgroundColor: p.bg }} contentContainerStyle={styles.content}>
       <Pressable onPress={() => router.push('/settings')}>
-        <Text style={[styles.hello, { color: p.text }]}>{profile.name ? `${profile.name} 👶` : 'Hello, little one 👶'}</Text>
+        <Text style={[styles.hello, { color: p.text }]}>{profile.name ? `${profile.name} 👶` : 'שלום, קטנטן/ה 👶'}</Text>
         <Text style={[styles.age, { color: p.muted }]}>
-          {profile.birthDate ? `Age: ${formatAge(profile.birthDate, now)}` : 'Tap to add name & birth date'}
+          {profile.birthDate ? `גיל: ${formatAge(profile.birthDate, now)}` : 'הקישו כדי להוסיף שם ותאריך לידה'}
         </Text>
       </Pressable>
 
@@ -90,7 +90,7 @@ export default function HomeScreen() {
         {QUICK.map((q) => {
           const color = p.types[q.type];
           const active = (q.key === 'sleep' && !!sleeping) || (q.key === 'breast' && !!breast);
-          const label = q.key === 'sleep' && sleeping ? 'Wake up' : q.label;
+          const label = q.key === 'sleep' && sleeping ? 'התעוררות' : q.label;
           const emoji = q.key === 'sleep' && sleeping ? '🌅' : q.emoji;
           return (
             <Pressable
@@ -116,7 +116,7 @@ export default function HomeScreen() {
           );
         })}
       </View>
-      <Text style={[styles.hint, { color: p.muted }]}>Long-press a button to enter a past event by hand.</Text>
+      <Text style={[styles.hint, { color: p.muted }]}>לחיצה ארוכה על כפתור — להזנת אירוע שכבר קרה.</Text>
 
       {breast ? <BreastTimerCard event={breast} /> : null}
 
@@ -125,19 +125,19 @@ export default function HomeScreen() {
           onPress={() => onQuick('sleep')}
           style={[styles.banner, { backgroundColor: tint(p.types.sleep, 0.14), borderColor: p.types.sleep }]}
         >
-          <Text style={[styles.bannerTitle, { color: p.text }]}>😴 Sleeping for {formatDuration(now - sleeping.start)}</Text>
-          <Text style={[styles.bannerSub, { color: p.muted }]}>Since {formatTime(sleeping.start)} · tap to log wake-up</Text>
+          <Text style={[styles.bannerTitle, { color: p.text }]}>😴 ישן/ה כבר {formatDuration(now - sleeping.start)}</Text>
+          <Text style={[styles.bannerSub, { color: p.muted }]}>מאז {formatTime(sleeping.start)} · הקישו כשהתעורר/ה</Text>
         </Pressable>
       ) : prediction ? (
         <View style={[styles.predict, { borderColor: p.types.sleep, backgroundColor: tint(p.types.sleep, 0.06) }]}>
           <Text style={[styles.predictTitle, { color: p.text }]}>
-            🛏️ Predicted nap: {formatTime(prediction.at)}
+            🛏️ שינה צפויה: {formatTime(prediction.at)}
           </Text>
           <Text style={[styles.bannerSub, { color: p.muted }]}>
             {prediction.at > now
-              ? `in ${formatDuration(prediction.at - now)}`
-              : `${formatDuration(now - prediction.at)} past the usual time`}
-            {' · '}avg awake window {formatDuration(prediction.windowMs)}
+              ? `בעוד ${formatDuration(prediction.at - now)}`
+              : `באיחור של ${formatDuration(now - prediction.at)} מהרגיל`}
+            {' · '}זמן ערות ממוצע {formatDuration(prediction.windowMs)}
           </Text>
         </View>
       ) : null}
@@ -157,20 +157,20 @@ export default function HomeScreen() {
           onPress={() => lastSleep && openEvent(lastSleep)}
           override={
             sleeping
-              ? { big: formatDuration(now - sleeping.start), small: 'asleep' }
+              ? { big: formatDuration(now - sleeping.start), small: 'ישן/ה' }
               : lastSleep?.end !== undefined
-                ? { big: formatDuration(now - lastSleep.end), small: 'awake' }
+                ? { big: formatDuration(now - lastSleep.end), small: 'ער/ה' }
                 : undefined
           }
         />
       </View>
 
-      <Text style={[styles.section, { color: p.muted }]}>TODAY</Text>
+      <Text style={[styles.section, { color: p.muted }]}>היום</Text>
       <SummaryChips summary={summary} />
 
       <View style={{ marginTop: 12 }}>
         {today.length === 0 ? (
-          <Text style={[styles.empty, { color: p.muted }]}>Nothing logged yet today. Tap a button above to start.</Text>
+          <Text style={[styles.empty, { color: p.muted }]}>עוד לא נרשם כלום היום. הקישו על כפתור למעלה כדי להתחיל.</Text>
         ) : (
           today.map((e) => <EventRow key={e.id} event={e} now={now} onPress={() => openEvent(e)} />)
         )}
@@ -195,8 +195,8 @@ function LastCard({
   const p = usePalette();
   const meta = TYPE_META[type];
   const justNow = event && now - event.start < MINUTE;
-  const big = override?.big ?? (event ? (justNow ? 'Just now' : formatDuration(now - event.start)) : '—');
-  const small = override?.small ?? (event ? (justNow ? ' ' : 'ago') : 'no data');
+  const big = override?.big ?? (event ? (justNow ? 'עכשיו' : formatDuration(now - event.start)) : '—');
+  const small = override?.small ?? (event ? (justNow ? ' ' : 'מאז הפעם האחרונה') : 'אין נתונים');
   return (
     <Pressable onPress={onPress} style={[styles.lastCard, { backgroundColor: p.card, borderColor: p.border }]}>
       <View style={styles.lastHead}>
@@ -221,7 +221,8 @@ function LastCard({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  hello: { fontSize: 26, fontWeight: '800' },
+  // writingDirection keeps a Latin-script name ("Tom") right-aligned in the RTL layout
+  hello: { fontSize: 26, fontWeight: '800', writingDirection: 'rtl' },
   age: { fontSize: 15, marginTop: 2 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, rowGap: 12 },
   quick: { width: '25%', alignItems: 'center' },
@@ -250,6 +251,6 @@ const styles = StyleSheet.create({
   lastBig: { fontSize: 20, fontWeight: '800', marginTop: 6 },
   lastSmall: { fontSize: 12 },
   lastDetail: { fontSize: 12, marginTop: 4 },
-  section: { fontSize: 13, fontWeight: '700', letterSpacing: 1, marginTop: 22, marginBottom: 10 },
+  section: { fontSize: 13, fontWeight: '700', marginTop: 22, marginBottom: 10 },
   empty: { fontSize: 15, textAlign: 'center', paddingVertical: 20 },
 });

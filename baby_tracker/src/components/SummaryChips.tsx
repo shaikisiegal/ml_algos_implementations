@@ -11,20 +11,20 @@ export function SummaryChips({ summary: s }: { summary: DaySummary }) {
     {
       color: p.types.feed,
       big: `${s.feeds}`,
-      label: s.feeds === 1 ? 'feed' : 'feeds',
-      sub: [s.bottleMl ? `${s.bottleMl} ml` : '', s.breastMin ? `${s.breastMin} min breast` : ''].filter(Boolean).join(' · '),
+      label: s.feeds === 1 ? 'האכלה' : 'האכלות',
+      sub: [s.bottleMl ? `${s.bottleMl} מ״ל` : '', s.breastMin ? `${s.breastMin} ד׳ הנקה` : ''].filter(Boolean).join(' · '),
     },
     {
       color: p.types.diaper,
       big: `${s.diapers}`,
-      label: s.diapers === 1 ? 'diaper' : 'diapers',
+      label: s.diapers === 1 ? 'חיתול' : 'חיתולים',
       sub: s.diapers ? `💧${s.wet}  💩${s.dirty}` : '',
     },
     {
       color: p.types.sleep,
       big: formatDuration(s.sleepMs),
-      label: 'sleep',
-      sub: s.naps ? `${s.naps} ${s.naps === 1 ? 'nap' : 'naps'}` : '',
+      label: 'שינה',
+      sub: s.naps ? `${s.naps} ${s.naps === 1 ? 'שינה' : 'שינות'}` : '',
     },
   ];
   return (

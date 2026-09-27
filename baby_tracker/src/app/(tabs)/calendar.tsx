@@ -12,7 +12,7 @@ import { MONTHS, dayKey, formatDate, isSameDay, startOfDay } from '../../lib/tim
 import { EVENT_TYPES, TYPE_META } from '../../lib/types';
 import { useNow } from '../../lib/useNow';
 
-const WEEK_HEADER = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEK_HEADER = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
 /** 6×7 grid of dates covering the month (Sunday first). */
 function monthGrid(year: number, month: number): Date[] {
@@ -63,7 +63,7 @@ export default function CalendarScreen() {
     <ScrollView style={{ backgroundColor: p.bg }} contentContainerStyle={styles.content}>
       <View style={[styles.card, { backgroundColor: p.card, borderColor: p.border }]}>
         <View style={styles.monthRow}>
-          <Pressable onPress={() => shiftMonth(-1)} hitSlop={12} style={styles.navBtn} accessibilityLabel="Previous month">
+          <Pressable onPress={() => shiftMonth(-1)} hitSlop={12} style={styles.navBtn} accessibilityLabel="החודש הקודם">
             <Text style={[styles.nav, { color: p.accent }]}>‹</Text>
           </Pressable>
           <Pressable onPress={goToday}>
@@ -71,7 +71,7 @@ export default function CalendarScreen() {
               {MONTHS[cursor.month]} {cursor.year}
             </Text>
           </Pressable>
-          <Pressable onPress={() => shiftMonth(1)} hitSlop={12} style={styles.navBtn} accessibilityLabel="Next month">
+          <Pressable onPress={() => shiftMonth(1)} hitSlop={12} style={styles.navBtn} accessibilityLabel="החודש הבא">
             <Text style={[styles.nav, { color: p.accent }]}>›</Text>
           </Pressable>
         </View>
@@ -137,7 +137,7 @@ export default function CalendarScreen() {
           onPress={addOnSelected}
           style={({ pressed }) => [styles.addBtn, { backgroundColor: tint(p.accent, 0.15) }, pressed && { opacity: 0.7 }]}
         >
-          <Text style={[styles.addText, { color: p.accent }]}>＋ Add</Text>
+          <Text style={[styles.addText, { color: p.accent }]}>＋ הוספה</Text>
         </Pressable>
       </View>
 
@@ -145,14 +145,14 @@ export default function CalendarScreen() {
 
       <View style={{ marginTop: 12 }}>
         {dayEvents.length === 0 ? (
-          <Text style={[styles.empty, { color: p.muted }]}>No events on this day.</Text>
+          <Text style={[styles.empty, { color: p.muted }]}>אין אירועים ביום הזה.</Text>
         ) : (
           dayEvents.map((e) => (
             <EventRow key={e.id} event={e} now={now} onPress={() => router.push({ pathname: '/event', params: { id: e.id } })} />
           ))
         )}
       </View>
-      <Text style={[styles.hint, { color: p.muted }]}>Tap an event to edit or delete it.</Text>
+      <Text style={[styles.hint, { color: p.muted }]}>הקישו על אירוע כדי לערוך או למחוק.</Text>
     </ScrollView>
   );
 }

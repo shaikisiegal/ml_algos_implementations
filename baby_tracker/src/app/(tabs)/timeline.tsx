@@ -51,7 +51,7 @@ export default function TimelineScreen() {
             />
           ))}
         </ScrollView>
-        <View style={{ marginLeft: LABEL_W, marginRight: 12 }}>
+        <View style={{ marginLeft: 12, marginRight: 12 + LABEL_W }}>
           <HourAxis />
         </View>
       </View>
@@ -95,7 +95,7 @@ export default function TimelineScreen() {
         }}
         ListFooterComponent={
           <Text style={[styles.footer, { color: p.muted }]}>
-            {events.length === 0 ? 'Your timeline fills up as you log events.' : 'Tap an icon or sleep bar to edit it.'}
+            {events.length === 0 ? 'ציר הזמן יתמלא ככל שתרשמו אירועים.' : 'הקישו על אייקון או על פס שינה כדי לערוך.'}
           </Text>
         }
       />
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   header: { paddingTop: 10, paddingBottom: 4, borderBottomWidth: StyleSheet.hairlineWidth },
   filters: { gap: 8, paddingHorizontal: 12, paddingBottom: 10 },
   list: { paddingHorizontal: 12, paddingBottom: 30 },
-  month: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginTop: 12, marginBottom: 4, marginLeft: LABEL_W },
+  month: { fontSize: 12, fontWeight: '700', marginTop: 12, marginBottom: 4, marginRight: LABEL_W },
   row: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   label: { width: LABEL_W, alignItems: 'center' },
   weekday: { fontSize: 11, fontWeight: '600' },

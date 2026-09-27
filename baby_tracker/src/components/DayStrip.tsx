@@ -78,7 +78,7 @@ export function DayStrip({ day, events, now, visible, onPressEvent }: Props) {
                   key={e.id}
                   onPress={() => onPressEvent(e)}
                   hitSlop={8}
-                  accessibilityLabel="Sleep"
+                  accessibilityLabel={TYPE_META.sleep.label}
                   style={[
                     styles.sleep,
                     {
@@ -142,7 +142,8 @@ export function HourAxis() {
 }
 
 const styles = StyleSheet.create({
-  strip: { height: STRIP_HEIGHT, borderRadius: 8, overflow: 'hidden' },
+  // Time runs left→right (00 → 24) even in the RTL UI, like a clock/graph axis.
+  strip: { height: STRIP_HEIGHT, borderRadius: 8, overflow: 'hidden', direction: 'ltr' },
   night: { position: 'absolute', top: 0, bottom: 0, opacity: 0.8 },
   gridLine: { position: 'absolute', top: 0, bottom: 0, width: StyleSheet.hairlineWidth },
   sleep: { position: 'absolute', top: SLEEP_Y, height: 12, borderRadius: 4 },
@@ -157,6 +158,6 @@ const styles = StyleSheet.create({
   },
   iconText: { fontSize: 10, lineHeight: 12 },
   nowLine: { position: 'absolute', top: 0, bottom: 0, width: 2 },
-  axis: { height: 16 },
+  axis: { height: 16, direction: 'ltr' },
   axisLabel: { position: 'absolute', width: 16, textAlign: 'center', fontSize: 11, fontVariant: ['tabular-nums'] },
 });

@@ -1,9 +1,16 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { I18nManager, Platform, useColorScheme } from 'react-native';
 
 import { StoreProvider } from '../lib/store';
 import { usePalette } from '../lib/theme';
+
+// Hebrew UI: right-to-left. On web this comes from <html dir="rtl"> (public/index.html);
+// natively RN needs forceRTL, which applies from the next app launch.
+if (Platform.OS !== 'web' && !I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+}
 
 export default function RootLayout() {
   const scheme = useColorScheme();
@@ -20,8 +27,8 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="event" options={{ presentation: 'modal', title: 'Add event' }} />
-          <Stack.Screen name="settings" options={{ presentation: 'modal', title: 'Baby profile' }} />
+          <Stack.Screen name="event" options={{ presentation: 'modal', title: 'אירוע חדש' }} />
+          <Stack.Screen name="settings" options={{ presentation: 'modal', title: 'פרופיל התינוק/ת' }} />
         </Stack>
       </ThemeProvider>
     </StoreProvider>

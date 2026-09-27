@@ -13,10 +13,10 @@ let n = 0;
 const ev = (e: Omit<BabyEvent, 'id' | 'createdAt' | 'updatedAt'>): BabyEvent => ({ ...e, id: String(n++), createdAt: 0, updatedAt: 0 });
 
 test('formatDuration', () => {
-  assert.equal(formatDuration(0), '0m');
-  assert.equal(formatDuration(45 * MINUTE), '45m');
-  assert.equal(formatDuration(2 * HOUR), '2h');
-  assert.equal(formatDuration(HOUR + 25 * MINUTE), '1h 25m');
+  assert.equal(formatDuration(0), '0\u00A0ד׳');
+  assert.equal(formatDuration(45 * MINUTE), '45\u00A0ד׳');
+  assert.equal(formatDuration(2 * HOUR), '2\u00A0ש׳');
+  assert.equal(formatDuration(HOUR + 25 * MINUTE), '1\u00A0ש׳ 25\u00A0ד׳');
 });
 
 test('startOfNextDay / dayKey', () => {
@@ -24,10 +24,10 @@ test('startOfNextDay / dayKey', () => {
 });
 
 test('formatAge', () => {
-  assert.equal(formatAge(at(20, 8), at(27, 23)), '7d (Week 2)');
-  assert.equal(formatAge(at(27, 8), at(27, 9)), '0d (Week 1)');
+  assert.equal(formatAge(at(20, 8), at(27, 23)), '7 ימים (שבוע 2)');
+  assert.equal(formatAge(at(27, 8), at(27, 9)), '0 ימים (שבוע 1)');
   // born 7 Jul → 27 Sep = 2 months 20 days, day 82 → week 12
-  assert.equal(formatAge(new Date(2026, 6, 7).getTime(), at(27, 9)), '2m 20d (Week 12)');
+  assert.equal(formatAge(new Date(2026, 6, 7).getTime(), at(27, 9)), '2 ח׳ 20 י׳ (שבוע 12)');
 });
 
 test('summarizeDay totals feeds, diapers and splits overnight sleep', () => {
@@ -73,10 +73,10 @@ test('lastOfType picks the latest by start time, not insertion order', () => {
 });
 
 test('describeEvent', () => {
-  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'bottle', amountMl: 120, milk: 'formula' })), 'Bottle · 120 ml formula');
-  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', side: 'both', durationMin: 10 })), 'Breast · both sides · 10 min');
-  assert.equal(describeEvent(ev({ type: 'diaper', start: 0, diaper: 'dirty', color: 'yellow' })), '💩 Dirty · yellow');
-  assert.equal(describeEvent(ev({ type: 'sleep', start: 0, end: 90 * MINUTE })), 'Slept 1h 30m');
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'bottle', amountMl: 120, milk: 'formula' })), 'בקבוק · 120 מ״ל תמ״ל');
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', side: 'both', durationMin: 10 })), 'הנקה · שני הצדדים · 10\u00A0ד׳');
+  assert.equal(describeEvent(ev({ type: 'diaper', start: 0, diaper: 'dirty', color: 'yellow' })), '💩 קקי · צהוב');
+  assert.equal(describeEvent(ev({ type: 'sleep', start: 0, end: 90 * MINUTE })), 'שינה של 1\u00A0ש׳ 30\u00A0ד׳');
   assert.equal(describeEvent(ev({ type: 'medicine', start: 0, medName: 'Vitamin D', dose: '1 drop' })), 'Vitamin D · 1 drop');
 });
 
@@ -123,9 +123,9 @@ test('recommendedSleepHours by age', () => {
 });
 
 test('describeEvent for breast sides and growth', () => {
-  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', leftMin: 7, rightMin: 3 })), 'Breast · L 7m · R 3m');
-  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', breastTimer: { leftMs: 0, rightMs: 0 } })), 'Breastfeeding · in progress');
-  assert.equal(describeEvent(ev({ type: 'growth', start: 0, weightKg: 4.2, headCm: 38 })), '4.2 kg · head 38 cm');
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', leftMin: 7, rightMin: 3 })), 'הנקה · שמאל 7\u00A0ד׳ · ימין 3\u00A0ד׳');
+  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', breastTimer: { leftMs: 0, rightMs: 0 } })), 'הנקה · בתהליך');
+  assert.equal(describeEvent(ev({ type: 'growth', start: 0, weightKg: 4.2, headCm: 38 })), '4.2 ק״ג · היקף ראש 38 ס״מ');
 });
 
 test('backup round-trip and validation', async () => {
@@ -134,6 +134,15 @@ test('backup round-trip and validation', async () => {
   const back = parseBackup(serializeBackup({ profile: { name: 'Tom', birthDate: at(1, 0) }, events }));
   assert.deepEqual(back.events, events);
   assert.deepEqual(back.profile, { name: 'Tom', birthDate: at(1, 0) });
-  assert.throws(() => parseBackup('hello'), /not valid JSON/);
-  assert.throws(() => parseBackup('{"events":[{"id":"x","type":"bogus","start":1}]}'), /damaged/);
+  assert.throws(() => parseBackup('hello'), /JSON לא תקין/);
+  assert.throws(() => parseBackup('{"events":[{"id":"x","type":"bogus","start":1}]}'), /פגומות/);
+});
+
+test('Hebrew dates', async () => {
+  const { formatDate, formatAgo, shortDate } = await import('../src/lib/time.ts');
+  assert.equal(formatDate(at(27, 9), at(27, 20)), 'היום');
+  assert.equal(formatDate(at(26, 9), at(27, 20)), 'אתמול');
+  assert.equal(formatDate(at(24, 9), at(27, 20)), 'יום ה׳, 24 בספט׳');
+  assert.equal(shortDate(at(3, 9)), '3 בספט׳');
+  assert.equal(formatAgo(at(27, 9), at(27, 11, 5)), 'לפני 2\u00A0ש׳ 5\u00A0ד׳');
 });

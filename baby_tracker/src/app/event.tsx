@@ -116,15 +116,15 @@ export default function EventScreen() {
 
   const save = () => {
     if (draft.type === 'sleep' && draft.end !== undefined && draft.end < draft.start) {
-      setError('Wake-up time must be after the sleep started.');
+      setError('שעת ההתעוררות חייבת להיות אחרי תחילת השינה.');
       return;
     }
     if (draft.type === 'growth' && draft.weightKg === undefined && draft.heightCm === undefined && draft.headCm === undefined) {
-      setError('Enter at least one measurement.');
+      setError('הזינו לפחות מדידה אחת.');
       return;
     }
     if (draft.type === 'medicine' && !draft.medName?.trim()) {
-      setError('Please enter the medicine name.');
+      setError('הזינו את שם התרופה.');
       return;
     }
     const clean = normalize(draft);
@@ -136,7 +136,7 @@ export default function EventScreen() {
 
   const remove = () => {
     if (!existing) return;
-    confirm('Delete event?', 'This cannot be undone.', 'Delete', () => {
+    confirm('למחוק את האירוע?', 'אי אפשר לבטל את הפעולה.', 'מחיקה', () => {
       deleteEvent(existing.id);
       router.back();
     });
@@ -145,14 +145,14 @@ export default function EventScreen() {
   if (params.id && !existing) {
     return (
       <View style={[styles.flex, styles.center, { backgroundColor: p.bg }]}>
-        <Text style={{ color: p.muted }}>This event no longer exists.</Text>
+        <Text style={{ color: p.muted }}>האירוע הזה כבר לא קיים.</Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView style={[styles.flex, { backgroundColor: p.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ title: `${isEdit ? 'Edit' : 'New'} ${meta.label.toLowerCase()}` }} />
+      <Stack.Screen options={{ title: `${meta.label} · ${isEdit ? 'עריכה' : 'חדש'}` }} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.typeRow}>
           {EVENT_TYPES.map((t) => {
@@ -176,7 +176,7 @@ export default function EventScreen() {
           })}
         </View>
 
-        <Section title={draft.type === 'sleep' ? 'Fell asleep' : 'When'}>
+        <Section title={draft.type === 'sleep' ? 'נרדם/ה' : 'מתי'}>
           <TimeField value={draft.start} onChange={(start) => set({ start })} />
           <QuickTimes onPick={(start) => set({ start })} />
         </Section>
@@ -187,11 +187,11 @@ export default function EventScreen() {
         {draft.type === 'medicine' ? <MedicineFields draft={draft} set={set} /> : null}
         {draft.type === 'growth' ? <GrowthFields draft={draft} set={set} /> : null}
 
-        <Section title={draft.type === 'note' ? 'Note' : 'Note (optional)'}>
+        <Section title={draft.type === 'note' ? 'הערה' : 'הערה (לא חובה)'}>
           <TextInput
             value={draft.note ?? ''}
             onChangeText={(note) => set({ note })}
-            placeholder={draft.type === 'note' ? 'e.g. first smile! 😊' : 'Anything worth remembering…'}
+            placeholder={draft.type === 'note' ? 'למשל: חיוך ראשון! 😊' : 'משהו ששווה לזכור…'}
             placeholderTextColor={p.muted}
             multiline
             style={[styles.input, styles.multiline, { backgroundColor: p.card, borderColor: p.border, color: p.text }]}
@@ -204,14 +204,14 @@ export default function EventScreen() {
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), borderColor: p.border, backgroundColor: p.bg }]}>
         {isEdit ? (
           <Pressable onPress={remove} style={[styles.deleteBtn, { borderColor: p.danger }]}>
-            <Text style={[styles.deleteText, { color: p.danger }]}>Delete</Text>
+            <Text style={[styles.deleteText, { color: p.danger }]}>מחיקה</Text>
           </Pressable>
         ) : null}
         <Pressable
           onPress={save}
           style={({ pressed }) => [styles.saveBtn, { backgroundColor: p.types[draft.type] }, pressed && { opacity: 0.8 }]}
         >
-          <Text style={styles.saveText}>{isEdit ? 'Save changes' : `Save ${meta.label.toLowerCase()}`}</Text>
+          <Text style={styles.saveText}>{isEdit ? 'שמירת שינויים' : `שמירה · ${meta.label}`}</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -224,7 +224,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   const p = usePalette();
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: p.muted }]}>{title.toUpperCase()}</Text>
+      <Text style={[styles.sectionTitle, { color: p.muted }]}>{title}</Text>
       {children}
     </View>
   );
@@ -238,15 +238,15 @@ function FeedFields({ draft, set }: FieldProps) {
   const p = usePalette();
   const color = usePalette().types.feed;
   const methods: { key: FeedMethod; label: string }[] = [
-    { key: 'bottle', label: '🍼 Bottle' },
-    { key: 'breast', label: '🤱 Breast' },
-    { key: 'solids', label: '🥣 Solids' },
+    { key: 'bottle', label: '🍼 בקבוק' },
+    { key: 'breast', label: '🤱 הנקה' },
+    { key: 'solids', label: '🥣 מוצקים' },
   ];
   const amount = draft.amountMl ?? 0;
 
   return (
     <>
-      <Section title="Type">
+      <Section title="סוג">
         <ChipRow>
           {methods.map((m) => (
             <Chip key={m.key} big label={m.label} color={color} selected={draft.method === m.key} onPress={() => set(m.key === 'breast' && draft.leftMin === undefined ? { method: m.key, leftMin: 10, rightMin: 0 } : { method: m.key })} />
@@ -256,24 +256,24 @@ function FeedFields({ draft, set }: FieldProps) {
 
       {draft.method === 'bottle' ? (
         <>
-          <Section title="Milk">
+          <Section title="חלב">
             <ChipRow>
               {(
                 [
-                  ['formula', 'Formula'],
-                  ['breastmilk', 'Breast milk'],
+                  ['formula', 'תמ״ל'],
+                  ['breastmilk', 'חלב אם'],
                 ] as [MilkType, string][]
               ).map(([k, label]) => (
                 <Chip key={k} label={label} color={color} selected={draft.milk === k} onPress={() => set({ milk: k })} />
               ))}
             </ChipRow>
           </Section>
-          <Section title="Amount">
+          <Section title="כמות">
             <View style={styles.stepper}>
               <StepBtn label="−" onPress={() => set({ amountMl: Math.max(0, amount - 10) })} />
               <View style={styles.amountBox}>
                 <Text style={[styles.amount, { color: p.text }]}>{amount}</Text>
-                <Text style={[styles.amountUnit, { color: p.muted }]}>ml</Text>
+                <Text style={[styles.amountUnit, { color: p.muted }]}>מ״ל</Text>
               </View>
               <StepBtn label="+" onPress={() => set({ amountMl: amount + 10 })} />
             </View>
@@ -289,16 +289,16 @@ function FeedFields({ draft, set }: FieldProps) {
       {draft.method === 'breast' ? (
         <>
           {draft.breastTimer ? (
-            <Text style={[styles.duration, { color: p.muted }]}>⏱ The timer for this feed is still running — finish it from the Home screen.</Text>
+            <Text style={[styles.duration, { color: p.muted }]}>⏱ הטיימר של ההנקה הזו עדיין פועל — אפשר לסיים אותו במסך הבית.</Text>
           ) : (
-            <Section title="Minutes per side">
-              <MinutesStepper label="Left" value={draft.leftMin ?? 0} onChange={(leftMin) => set({ leftMin })} />
-              <MinutesStepper label="Right" value={draft.rightMin ?? 0} onChange={(rightMin) => set({ rightMin })} />
+            <Section title="דקות בכל צד">
+              <MinutesStepper label="שמאל" value={draft.leftMin ?? 0} onChange={(leftMin) => set({ leftMin })} />
+              <MinutesStepper label="ימין" value={draft.rightMin ?? 0} onChange={(rightMin) => set({ rightMin })} />
               <ChipRow>
                 {MIN_PRESETS.map((m) => (
                   <Chip
                     key={m}
-                    label={`${m} min`}
+                    label={`${m} ד׳`}
                     color={color}
                     selected={(draft.leftMin ?? 0) + (draft.rightMin ?? 0) === m}
                     onPress={() => set({ leftMin: m, rightMin: 0 })}
@@ -311,11 +311,11 @@ function FeedFields({ draft, set }: FieldProps) {
       ) : null}
 
       {draft.method === 'solids' ? (
-        <Section title="What did baby eat?">
+        <Section title="מה אכל/ה?">
           <TextInput
             value={draft.food ?? ''}
             onChangeText={(food) => set({ food })}
-            placeholder="e.g. banana puree"
+            placeholder="למשל: מחית בננה"
             placeholderTextColor={p.muted}
             style={[styles.input, { backgroundColor: p.card, borderColor: p.border, color: p.text }]}
           />
@@ -330,7 +330,7 @@ function DiaperFields({ draft, set }: FieldProps) {
   const showColor = draft.diaper === 'dirty' || draft.diaper === 'mixed';
   return (
     <>
-      <Section title="What's in it?">
+      <Section title="מה יש בחיתול?">
         <View style={styles.grid2}>
           {(Object.keys(DIAPER_META) as DiaperKind[]).map((k) => (
             <Chip
@@ -346,7 +346,7 @@ function DiaperFields({ draft, set }: FieldProps) {
         </View>
       </Section>
       {showColor ? (
-        <Section title="Poop color (optional)">
+        <Section title="צבע הקקי (לא חובה)">
           <ChipRow>
             {(Object.keys(STOOL_COLORS) as StoolColor[]).map((c) => (
               <Chip
@@ -369,17 +369,17 @@ function SleepFields({ draft, set }: FieldProps) {
   const color = usePalette().types.sleep;
   const ongoing = draft.end === undefined;
   return (
-    <Section title="Woke up">
+    <Section title="התעורר/ה">
       <ChipRow>
-        <Chip label="Still sleeping" color={color} selected={ongoing} onPress={() => set({ end: undefined })} />
-        <Chip label="Woke up at…" color={color} selected={!ongoing} onPress={() => set({ end: Math.max(Date.now(), draft.start) })} />
+        <Chip label="עדיין ישן/ה" color={color} selected={ongoing} onPress={() => set({ end: undefined })} />
+        <Chip label="התעורר/ה ב…" color={color} selected={!ongoing} onPress={() => set({ end: Math.max(Date.now(), draft.start) })} />
       </ChipRow>
       {!ongoing ? (
         <View style={{ marginTop: 10 }}>
           <TimeField value={draft.end!} onChange={(end) => set({ end })} />
           <QuickTimes onPick={(end) => set({ end })} />
           <Text style={[styles.duration, { color: p.text }]}>
-            Duration: <Text style={{ fontWeight: '800' }}>{formatDuration(draft.end! - draft.start)}</Text>
+            משך: <Text style={{ fontWeight: '800' }}>{formatDuration(draft.end! - draft.start)}</Text>
           </Text>
         </View>
       ) : null}
@@ -391,18 +391,18 @@ function MedicineFields({ draft, set }: FieldProps) {
   const p = usePalette();
   const inputStyle = [styles.input, { backgroundColor: p.card, borderColor: p.border, color: p.text }];
   return (
-    <Section title="Medicine">
+    <Section title="תרופה">
       <TextInput
         value={draft.medName ?? ''}
         onChangeText={(medName) => set({ medName })}
-        placeholder="Name (e.g. Vitamin D)"
+        placeholder="שם (למשל: ויטמין D)"
         placeholderTextColor={p.muted}
         style={inputStyle}
       />
       <TextInput
         value={draft.dose ?? ''}
         onChangeText={(dose) => set({ dose })}
-        placeholder="Dose (e.g. 1 drop, 2.5 ml)"
+        placeholder="מינון (למשל: טיפה אחת, 2.5 מ״ל)"
         placeholderTextColor={p.muted}
         style={[inputStyle, { marginTop: 8 }]}
       />
@@ -424,10 +424,10 @@ function MinutesStepper({ label, value, onChange }: { label: string; value: numb
 
 function GrowthFields({ draft, set }: FieldProps) {
   return (
-    <Section title="Measurements">
-      <DecimalField label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => set({ weightKg })} placeholder="e.g. 4.25" />
-      <DecimalField label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => set({ heightCm })} placeholder="e.g. 55" />
-      <DecimalField label="Head" unit="cm" value={draft.headCm} onChange={(headCm) => set({ headCm })} placeholder="e.g. 37.5" />
+    <Section title="מדידות">
+      <DecimalField label="משקל" unit="ק״ג" value={draft.weightKg} onChange={(weightKg) => set({ weightKg })} placeholder="למשל 4.25" />
+      <DecimalField label="גובה" unit="ס״מ" value={draft.heightCm} onChange={(heightCm) => set({ heightCm })} placeholder="למשל 55" />
+      <DecimalField label="ראש" unit="ס״מ" value={draft.headCm} onChange={(headCm) => set({ headCm })} placeholder="למשל 37.5" />
     </Section>
   );
 }
@@ -476,7 +476,7 @@ function StepBtn({ label, onPress, small }: { label: string; onPress: () => void
   return (
     <Pressable
       onPress={onPress}
-      accessibilityLabel={label === '+' ? 'Increase' : 'Decrease'}
+      accessibilityLabel={label === '+' ? 'הגדלה' : 'הקטנה'}
       style={({ pressed }) => [styles.stepBtn, small && styles.stepSmall, { backgroundColor: tint(color, 0.18) }, pressed && { opacity: 0.6 }]}
     >
       <Text style={[styles.stepText, small && styles.stepSmallText, { color: p.text }]}>{label}</Text>
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   typeEmoji: { fontSize: 22 },
   typeLabel: { fontSize: 11, fontWeight: '700', marginTop: 2 },
   section: { marginTop: 20 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
+  sectionTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   grid2: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   half: { flexBasis: '47%' },
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   amountBox: { flexDirection: 'row', alignItems: 'baseline', minWidth: 110, justifyContent: 'center' },
   amount: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] },
   amountUnit: { fontSize: 18, marginLeft: 4 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
+  input: { writingDirection: 'rtl', borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
   multiline: { minHeight: 70, textAlignVertical: 'top' },
   duration: { fontSize: 16, marginTop: 10 },
   error: { marginTop: 16, fontSize: 15, fontWeight: '600' },

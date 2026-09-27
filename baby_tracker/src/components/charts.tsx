@@ -16,7 +16,7 @@ export interface BarDatum {
   value: number;
   /** Extra line in the tooltip, e.g. "💧 5 · 💩 2". */
   detail?: string;
-  /** Tooltip title, e.g. "Mon 21 Sep". */
+  /** Tooltip title, e.g. "21 בספט׳". */
   title: string;
 }
 
@@ -61,11 +61,11 @@ export function BarChart({ data, color, format, average, band, bandLabel, height
             </Text>
           </View>
         ) : (
-          <Text style={[styles.tapHint, { color: p.muted }]}>Tap a bar for details</Text>
+          <Text style={[styles.tapHint, { color: p.muted }]}>הקישו על עמודה לפרטים</Text>
         )}
       </View>
 
-      <View style={{ height: height + 22 }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View style={{ height: height + 22, direction: 'ltr' }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0 ? (
           <>
             {[0, 0.5, 1].map((f) => (
@@ -112,7 +112,7 @@ export function BarChart({ data, color, format, average, band, bandLabel, height
 
             {average !== undefined && average > 0 ? (
               <View style={[styles.avgLine, { left: Y_AXIS_W, width: plotW, top: y(average), backgroundColor: p.text }]}>
-                <Text style={[styles.avgLabel, { color: p.text, backgroundColor: p.card }]}>avg {format(average)}</Text>
+                <Text style={[styles.avgLabel, { color: p.text, backgroundColor: p.card }]}>ממוצע {format(average)}</Text>
               </View>
             ) : null}
 
@@ -179,10 +179,10 @@ export function LineChart({
             <Text style={[styles.tooltipValue, { color: p.bg }]}>{format(selected.value)}</Text>
           </View>
         ) : (
-          <Text style={[styles.tapHint, { color: p.muted }]}>Tap a point for details</Text>
+          <Text style={[styles.tapHint, { color: p.muted }]}>הקישו על נקודה לפרטים</Text>
         )}
       </View>
-      <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View style={{ height, direction: 'ltr' }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0 ? (
           <>
             {[yMin, (yMin + yMax) / 2, yMax].map((v, i) => (
