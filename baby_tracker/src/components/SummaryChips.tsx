@@ -12,7 +12,7 @@ export function SummaryChips({ summary: s }: { summary: DaySummary }) {
       color: p.types.feed,
       big: `${s.feeds}`,
       label: s.feeds === 1 ? 'האכלה' : 'האכלות',
-      sub: [s.bottleMl ? `${s.bottleMl} מ״ל` : '', s.breastMin ? `${s.breastMin} ד׳ הנקה` : ''].filter(Boolean).join(' · '),
+      sub: s.bottleMl ? `${s.bottleMl} מ״ל` : '',
     },
     {
       color: p.types.diaper,

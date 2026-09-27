@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { finishTimer, formatClock, startSide, timerElapsed, toggleSide } from '../src/lib/breast.ts';
 import { describeEvent } from '../src/lib/describe.ts';
 import { dailySeries, eventsForDay, lastOfType, ongoingSleep, predictNextNap, recommendedSleepHours, summarizeDay } from '../src/lib/stats.ts';
 import { HOUR, MINUTE, dayKey, formatAge, formatDuration, startOfNextDay } from '../src/lib/time.ts';
@@ -45,7 +44,6 @@ test('summarizeDay totals feeds, diapers and splits overnight sleep', () => {
   const s = summarizeDay(events, at(27, 12), at(27, 20));
   assert.equal(s.feeds, 3);
   assert.equal(s.bottleMl, 210);
-  assert.equal(s.breastMin, 15);
   assert.equal(s.diapers, 3);
   assert.equal(s.wet, 2);
   assert.equal(s.dirty, 2);
@@ -80,19 +78,6 @@ test('describeEvent', () => {
   assert.equal(describeEvent(ev({ type: 'medicine', start: 0, medName: 'Vitamin D', dose: '1 drop' })), 'Vitamin D · 1 drop');
 });
 
-test('breast timer: start, switch sides, pause, finish', () => {
-  const t0 = at(27, 10);
-  let t = startSide(undefined, 'left', t0);
-  assert.deepEqual(timerElapsed(t, t0 + 5 * MINUTE), { left: 5 * MINUTE, right: 0, total: 5 * MINUTE });
-  t = toggleSide(t, 'right', t0 + 7 * MINUTE); // switch: left banks 7m
-  t = toggleSide(t, 'right', t0 + 10 * MINUTE); // pause right at 3m
-  assert.equal(t.running, undefined);
-  assert.deepEqual(timerElapsed(t, t0 + 60 * MINUTE), { left: 7 * MINUTE, right: 3 * MINUTE, total: 10 * MINUTE });
-  assert.deepEqual(finishTimer(t, t0 + 60 * MINUTE), { leftMin: 7, rightMin: 3, durationMin: 10, side: 'both' });
-  assert.equal(formatClock(7 * MINUTE + 12_000), '07:12');
-  assert.equal(formatClock(HOUR + 2 * MINUTE + 5_000), '1:02:05');
-});
-
 test('predictNextNap averages recent awake windows', () => {
   const sleeps = [
     ev({ type: 'sleep', start: at(27, 6), end: at(27, 7) }),
@@ -124,7 +109,6 @@ test('recommendedSleepHours by age', () => {
 
 test('describeEvent for breast sides and growth', () => {
   assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', leftMin: 7, rightMin: 3 })), 'הנקה · שמאל 7\u00A0ד׳ · ימין 3\u00A0ד׳');
-  assert.equal(describeEvent(ev({ type: 'feed', start: 0, method: 'breast', breastTimer: { leftMs: 0, rightMs: 0 } })), 'הנקה · בתהליך');
   assert.equal(describeEvent(ev({ type: 'growth', start: 0, weightKg: 4.2, headCm: 38 })), '4.2 ק״ג · היקף ראש 38 ס״מ');
 });
 
@@ -145,4 +129,15 @@ test('Hebrew dates', async () => {
   assert.equal(formatDate(at(24, 9), at(27, 20)), 'יום ה׳, 24 בספט׳');
   assert.equal(shortDate(at(3, 9)), '3 בספט׳');
   assert.equal(formatAgo(at(27, 9), at(27, 11, 5)), 'לפני 2\u00A0ש׳ 5\u00A0ד׳');
+});
+
+test('family codes', async () => {
+  const { generateFamilyCode, normalizeFamilyCode, formatFamilyCode } = await import('../src/lib/familyCode.ts');
+  const code = generateFamilyCode();
+  assert.match(code, /^[A-HJ-NP-Z2-9]{16}$/);
+  assert.notEqual(code, generateFamilyCode());
+  assert.equal(formatFamilyCode('ABCDEFGHJKLMNPQR'), 'ABCD-EFGH-JKLM-NPQR');
+  assert.equal(normalizeFamilyCode(' abcd-efgh jklm-npqr '), 'ABCDEFGHJKLMNPQR');
+  assert.equal(normalizeFamilyCode('ABCD-EFGH-JKLM-NPQ'), null); // too short
+  assert.equal(normalizeFamilyCode('ABCD-EFGH-JKLM-NPQ0'), null); // 0 is never used
 });

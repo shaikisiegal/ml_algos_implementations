@@ -1,0 +1,14 @@
+rules_version = '2';
+// Baby Log sync. Each family's data lives under /families/{familyCode}; the 16-character
+// code is random (80 bits) and only shared between the family's phones, so knowing it is
+// the access key. Listing all families is not allowed.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /families/{familyId} {
+      allow get, create, update: if familyId.size() == 16;
+      match /events/{eventId} {
+        allow read, write: if familyId.size() == 16;
+      }
+    }
+  }
+}

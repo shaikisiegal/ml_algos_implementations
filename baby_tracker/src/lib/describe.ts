@@ -14,7 +14,6 @@ export function describeEvent(e: BabyEvent, now: number = Date.now()): string {
         return parts.join(' · ');
       }
       if (e.method === 'breast') {
-        if (e.breastTimer) return 'הנקה · בתהליך';
         const parts = ['הנקה'];
         if (e.leftMin === 0 && e.rightMin === 0) return 'הנקה · פחות מדקה';
         if (e.leftMin || e.rightMin) {

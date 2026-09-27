@@ -9,7 +9,7 @@ import { TimeField } from '../components/TimeField';
 import { confirm, successFeedback } from '../lib/feedback';
 import { useStore, type NewEvent } from '../lib/store';
 import { tint, usePalette } from '../lib/theme';
-import { sideFromMinutes } from '../lib/breast';
+import { describeEvent } from '../lib/describe';
 import { formatDuration } from '../lib/time';
 import {
   DIAPER_META,
@@ -18,21 +18,17 @@ import {
   TYPE_META,
   type DiaperKind,
   type EventType,
-  type FeedMethod,
   type MilkType,
   type StoolColor,
 } from '../lib/types';
 
 const ML_PRESETS = [30, 60, 90, 120, 150, 180];
-const MIN_PRESETS = [5, 10, 15, 20, 30];
 
-type Params = { id?: string; type?: EventType; at?: string; method?: FeedMethod };
+type Params = { id?: string; type?: EventType; at?: string };
 
-function defaultsFor(type: EventType, start: number, method: FeedMethod = 'bottle'): NewEvent {
+function defaultsFor(type: EventType, start: number): NewEvent {
   switch (type) {
     case 'feed':
-      if (method === 'breast') return { type, start, method, leftMin: 10, rightMin: 0 };
-      if (method === 'solids') return { type, start, method };
       return { type, start, method: 'bottle', milk: 'formula', amountMl: 90 };
     case 'diaper':
       return { type, start, diaper: 'wet' };
@@ -50,17 +46,10 @@ function normalize(d: NewEvent): NewEvent {
   if (note) out.note = note;
   switch (d.type) {
     case 'feed':
-      out.method = d.method;
-      if (d.method === 'bottle') Object.assign(out, { milk: d.milk, amountMl: d.amountMl });
-      if (d.method === 'breast') {
-        if (d.breastTimer) out.breastTimer = d.breastTimer; // still running: keep the stopwatch
-        else if (d.leftMin !== undefined || d.rightMin !== undefined) {
-          const leftMin = d.leftMin ?? 0;
-          const rightMin = d.rightMin ?? 0;
-          Object.assign(out, { leftMin, rightMin, durationMin: leftMin + rightMin, side: sideFromMinutes(leftMin, rightMin) });
-        } else Object.assign(out, { side: d.side, durationMin: d.durationMin }); // older entries
-      }
-      if (d.method === 'solids' && d.food?.trim()) out.food = d.food.trim();
+      out.method = d.method ?? 'bottle';
+      if (out.method === 'bottle') Object.assign(out, { milk: d.milk, amountMl: d.amountMl });
+      // older breastfeeding / solids entries: keep their details unchanged
+      else Object.assign(out, { side: d.side, leftMin: d.leftMin, rightMin: d.rightMin, durationMin: d.durationMin, food: d.food });
       break;
     case 'diaper':
       out.diaper = d.diaper;
@@ -95,8 +84,7 @@ export default function EventScreen() {
       const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = existing;
       return rest;
     }
-    const method = params.method && ['bottle', 'breast', 'solids'].includes(params.method) ? params.method : undefined;
-    return defaultsFor(initialType, initialStart, method);
+    return defaultsFor(initialType, initialStart);
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -236,91 +224,47 @@ function ChipRow({ children }: { children: ReactNode }) {
 
 function FeedFields({ draft, set }: FieldProps) {
   const p = usePalette();
-  const color = usePalette().types.feed;
-  const methods: { key: FeedMethod; label: string }[] = [
-    { key: 'bottle', label: '🍼 בקבוק' },
-    { key: 'breast', label: '🤱 הנקה' },
-    { key: 'solids', label: '🥣 מוצקים' },
-  ];
-  const amount = draft.amountMl ?? 0;
+  const color = p.types.feed;
 
+  // Older entries (breastfeeding / solids, before the app went bottle-only) keep their details.
+  if (draft.method && draft.method !== 'bottle') {
+    return (
+      <Section title="פרטים">
+        <Text style={[styles.duration, { color: p.text }]}>{describeEvent({ ...draft, id: '', createdAt: 0, updatedAt: 0 })}</Text>
+      </Section>
+    );
+  }
+
+  const amount = draft.amountMl ?? 0;
   return (
     <>
-      <Section title="סוג">
+      <Section title="חלב">
         <ChipRow>
-          {methods.map((m) => (
-            <Chip key={m.key} big label={m.label} color={color} selected={draft.method === m.key} onPress={() => set(m.key === 'breast' && draft.leftMin === undefined ? { method: m.key, leftMin: 10, rightMin: 0 } : { method: m.key })} />
+          {(
+            [
+              ['formula', 'תמ״ל'],
+              ['breastmilk', 'חלב אם'],
+            ] as [MilkType, string][]
+          ).map(([k, label]) => (
+            <Chip key={k} label={label} color={color} selected={draft.milk === k} onPress={() => set({ milk: k })} />
           ))}
         </ChipRow>
       </Section>
-
-      {draft.method === 'bottle' ? (
-        <>
-          <Section title="חלב">
-            <ChipRow>
-              {(
-                [
-                  ['formula', 'תמ״ל'],
-                  ['breastmilk', 'חלב אם'],
-                ] as [MilkType, string][]
-              ).map(([k, label]) => (
-                <Chip key={k} label={label} color={color} selected={draft.milk === k} onPress={() => set({ milk: k })} />
-              ))}
-            </ChipRow>
-          </Section>
-          <Section title="כמות">
-            <View style={styles.stepper}>
-              <StepBtn label="−" onPress={() => set({ amountMl: Math.max(0, amount - 10) })} />
-              <View style={styles.amountBox}>
-                <Text style={[styles.amount, { color: p.text }]}>{amount}</Text>
-                <Text style={[styles.amountUnit, { color: p.muted }]}>מ״ל</Text>
-              </View>
-              <StepBtn label="+" onPress={() => set({ amountMl: amount + 10 })} />
-            </View>
-            <ChipRow>
-              {ML_PRESETS.map((ml) => (
-                <Chip key={ml} label={`${ml}`} color={color} selected={amount === ml} onPress={() => set({ amountMl: ml })} />
-              ))}
-            </ChipRow>
-          </Section>
-        </>
-      ) : null}
-
-      {draft.method === 'breast' ? (
-        <>
-          {draft.breastTimer ? (
-            <Text style={[styles.duration, { color: p.muted }]}>⏱ הטיימר של ההנקה הזו עדיין פועל — אפשר לסיים אותו במסך הבית.</Text>
-          ) : (
-            <Section title="דקות בכל צד">
-              <MinutesStepper label="שמאל" value={draft.leftMin ?? 0} onChange={(leftMin) => set({ leftMin })} />
-              <MinutesStepper label="ימין" value={draft.rightMin ?? 0} onChange={(rightMin) => set({ rightMin })} />
-              <ChipRow>
-                {MIN_PRESETS.map((m) => (
-                  <Chip
-                    key={m}
-                    label={`${m} ד׳`}
-                    color={color}
-                    selected={(draft.leftMin ?? 0) + (draft.rightMin ?? 0) === m}
-                    onPress={() => set({ leftMin: m, rightMin: 0 })}
-                  />
-                ))}
-              </ChipRow>
-            </Section>
-          )}
-        </>
-      ) : null}
-
-      {draft.method === 'solids' ? (
-        <Section title="מה אכל/ה?">
-          <TextInput
-            value={draft.food ?? ''}
-            onChangeText={(food) => set({ food })}
-            placeholder="למשל: מחית בננה"
-            placeholderTextColor={p.muted}
-            style={[styles.input, { backgroundColor: p.card, borderColor: p.border, color: p.text }]}
-          />
-        </Section>
-      ) : null}
+      <Section title="כמות">
+        <View style={styles.stepper}>
+          <StepBtn label="−" onPress={() => set({ amountMl: Math.max(0, amount - 10) })} />
+          <View style={styles.amountBox}>
+            <Text style={[styles.amount, { color: p.text }]}>{amount}</Text>
+            <Text style={[styles.amountUnit, { color: p.muted }]}>מ״ל</Text>
+          </View>
+          <StepBtn label="+" onPress={() => set({ amountMl: amount + 10 })} />
+        </View>
+        <ChipRow>
+          {ML_PRESETS.map((ml) => (
+            <Chip key={ml} label={`${ml}`} color={color} selected={amount === ml} onPress={() => set({ amountMl: ml })} />
+          ))}
+        </ChipRow>
+      </Section>
     </>
   );
 }
@@ -407,18 +351,6 @@ function MedicineFields({ draft, set }: FieldProps) {
         style={[inputStyle, { marginTop: 8 }]}
       />
     </Section>
-  );
-}
-
-function MinutesStepper({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
-  const p = usePalette();
-  return (
-    <View style={styles.minRow}>
-      <Text style={[styles.minLabel, { color: p.text }]}>{label}</Text>
-      <StepBtn label="−" small onPress={() => onChange(Math.max(0, value - 1))} />
-      <Text style={[styles.minValue, { color: p.text }]}>{value} min</Text>
-      <StepBtn label="+" small onPress={() => onChange(value + 1)} />
-    </View>
   );
 }
 
