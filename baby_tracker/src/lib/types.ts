@@ -67,27 +67,27 @@ export const EVENT_TYPES: EventType[] = ['feed', 'diaper', 'sleep', 'bath', 'med
 
 /** Colors live in the theme (`usePalette().types`) so dark mode gets its own validated steps. */
 export const TYPE_META: Record<EventType, { label: string; emoji: string }> = {
-  feed: { label: 'Feed', emoji: '🍼' },
-  diaper: { label: 'Diaper', emoji: '🧷' },
-  sleep: { label: 'Sleep', emoji: '😴' },
-  bath: { label: 'Bath', emoji: '🛁' },
-  medicine: { label: 'Medicine', emoji: '💊' },
-  note: { label: 'Note', emoji: '📝' },
-  growth: { label: 'Growth', emoji: '📏' },
+  feed: { label: 'האכלה', emoji: '🍼' },
+  diaper: { label: 'חיתול', emoji: '🧷' },
+  sleep: { label: 'שינה', emoji: '😴' },
+  bath: { label: 'מקלחת', emoji: '🛁' },
+  medicine: { label: 'תרופה', emoji: '💊' },
+  note: { label: 'הערה', emoji: '📝' },
+  growth: { label: 'גדילה', emoji: '📏' },
 };
 
 export const DIAPER_META: Record<DiaperKind, { label: string; emoji: string }> = {
-  wet: { label: 'Wet', emoji: '💧' },
-  dirty: { label: 'Dirty', emoji: '💩' },
-  mixed: { label: 'Both', emoji: '💧💩' },
-  dry: { label: 'Dry', emoji: '✨' },
+  wet: { label: 'רטוב', emoji: '💧' },
+  dirty: { label: 'קקי', emoji: '💩' },
+  mixed: { label: 'גם וגם', emoji: '💧💩' },
+  dry: { label: 'יבש', emoji: '✨' },
 };
 
 export const STOOL_COLORS: Record<StoolColor, { label: string; swatch: string }> = {
-  yellow: { label: 'Yellow', swatch: '#EAB308' },
-  green: { label: 'Green', swatch: '#65A30D' },
-  brown: { label: 'Brown', swatch: '#92400E' },
-  black: { label: 'Black', swatch: '#1F2937' },
-  red: { label: 'Red', swatch: '#DC2626' },
-  white: { label: 'Pale', swatch: '#E5E7EB' },
+  yellow: { label: 'צהוב', swatch: '#EAB308' },
+  green: { label: 'ירוק', swatch: '#65A30D' },
+  brown: { label: 'חום', swatch: '#92400E' },
+  black: { label: 'שחור', swatch: '#1F2937' },
+  red: { label: 'אדום', swatch: '#DC2626' },
+  white: { label: 'בהיר', swatch: '#E5E7EB' },
 };

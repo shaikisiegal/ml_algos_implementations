@@ -25,7 +25,8 @@
       "name": "Baby Log",
       "shortName": "Baby Log",
       "themeColor": "#FFF8F3",
-      "backgroundColor": "#FFF8F3"
+      "backgroundColor": "#FFF8F3",
+      "lang": "he"
     },
     "plugins": [
       "expo-router",

@@ -6,32 +6,28 @@ import { Chip } from '../../components/Chip';
 import { dailySeries, recommendedSleepHours, type DaySummary } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 import { usePalette } from '../../lib/theme';
-import { HOUR, MONTHS, addDays, daysBetween, formatDuration, startOfDay } from '../../lib/time';
+import { HOUR, addDays, daysBetween, formatDuration, shortDate, startOfDay } from '../../lib/time';
 import type { EventType } from '../../lib/types';
 import { useNow } from '../../lib/useNow';
 
 type Metric = 'sleep' | 'feeds' | 'bottle' | 'breast' | 'diapers';
 
 const METRICS: { key: Metric; label: string; type: EventType; value: (s: DaySummary) => number; format: (v: number) => string; unit: string }[] = [
-  { key: 'sleep', label: '😴 Sleep', type: 'sleep', value: (s) => s.sleepMs / HOUR, format: (v) => formatDuration(v * HOUR), unit: 'sleep per day' },
-  { key: 'feeds', label: '🍼 Feeds', type: 'feed', value: (s) => s.feeds, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'feeds per day' },
-  { key: 'bottle', label: '🥛 Bottle ml', type: 'feed', value: (s) => s.bottleMl, format: (v) => `${Math.round(v)} ml`, unit: 'bottle ml per day' },
-  { key: 'breast', label: '🤱 Breast min', type: 'feed', value: (s) => s.breastMin, format: (v) => `${Math.round(v)}m`, unit: 'breastfeeding minutes per day' },
-  { key: 'diapers', label: '🧷 Diapers', type: 'diaper', value: (s) => s.diapers, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'diapers per day' },
+  { key: 'sleep', label: '😴 שינה', type: 'sleep', value: (s) => s.sleepMs / HOUR, format: (v) => formatDuration(v * HOUR), unit: 'שעות שינה ביום' },
+  { key: 'feeds', label: '🍼 האכלות', type: 'feed', value: (s) => s.feeds, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'האכלות ביום' },
+  { key: 'bottle', label: '🥛 מ״ל בבקבוק', type: 'feed', value: (s) => s.bottleMl, format: (v) => `${Math.round(v)} מ״ל`, unit: 'מ״ל בבקבוק ביום' },
+  { key: 'breast', label: '🤱 דקות הנקה', type: 'feed', value: (s) => s.breastMin, format: (v) => `${Math.round(v)} ד׳`, unit: 'דקות הנקה ביום' },
+  { key: 'diapers', label: '🧷 חיתולים', type: 'diaper', value: (s) => s.diapers, format: (v) => `${Math.round(v * 10) / 10}`, unit: 'חיתולים ביום' },
 ];
 
 const RANGES = [7, 14, 30];
 
-const shortDate = (t: number) => {
-  const d = new Date(t);
-  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
-};
 
-/** "14–27 Sep", or "28 Aug – 3 Sep" across months. */
+/** "14–27 בספט׳", or "28 באוג׳ – 3 בספט׳" across months. */
 function rangeLabel(from: number, to: number): string {
   const a = new Date(from);
   const b = new Date(to);
-  return a.getMonth() === b.getMonth() ? `${a.getDate()}–${shortDate(to)}` : `${shortDate(from)} – ${shortDate(to)}`;
+  return a.getMonth() === b.getMonth() ? `${a.getDate()}-${shortDate(to)}` : `${shortDate(from)} – ${shortDate(to)}`;
 }
 
 export default function StatsScreen() {
@@ -68,9 +64,9 @@ export default function StatsScreen() {
     const s = d.summary;
     const dt = new Date(d.day);
     let detail: string | undefined;
-    if (metric === 'diapers') detail = `💧 ${s.wet} wet · 💩 ${s.dirty} dirty`;
-    if (metric === 'sleep') detail = `${s.naps} ${s.naps === 1 ? 'sleep' : 'sleeps'} started`;
-    if (metric === 'feeds' && (s.bottleMl || s.breastMin)) detail = [s.bottleMl ? `${s.bottleMl} ml` : '', s.breastMin ? `${s.breastMin} min breast` : ''].filter(Boolean).join(' · ');
+    if (metric === 'diapers') detail = `💧 ${s.wet} רטובים · 💩 ${s.dirty} קקי`;
+    if (metric === 'sleep') detail = `${s.naps} ${s.naps === 1 ? 'שינה' : 'שינות'} התחילו`;
+    if (metric === 'feeds' && (s.bottleMl || s.breastMin)) detail = [s.bottleMl ? `${s.bottleMl} מ״ל` : '', s.breastMin ? `${s.breastMin} ד׳ הנקה` : ''].filter(Boolean).join(' · ');
     return { label: String(dt.getDate()), title: shortDate(d.day), value: m.value(s), detail };
   });
 
@@ -83,7 +79,7 @@ export default function StatsScreen() {
       </ScrollView>
 
       <View style={styles.rangeRow}>
-        <Pressable onPress={() => setOffset((o) => o + 1)} hitSlop={12} accessibilityLabel="Earlier">
+        <Pressable onPress={() => setOffset((o) => o + 1)} hitSlop={12} accessibilityLabel="מוקדם יותר">
           <Text style={[styles.nav, { color: p.accent }]}>‹</Text>
         </Pressable>
         <Text style={[styles.rangeText, { color: p.text }]}>
@@ -93,7 +89,7 @@ export default function StatsScreen() {
           onPress={() => setOffset((o) => Math.max(0, o - 1))}
           hitSlop={12}
           disabled={offset === 0}
-          accessibilityLabel="Later"
+          accessibilityLabel="מאוחר יותר"
         >
           <Text style={[styles.nav, { color: offset === 0 ? p.border : p.accent }]}>›</Text>
         </Pressable>
@@ -101,7 +97,7 @@ export default function StatsScreen() {
         {RANGES.map((r) => (
           <Chip
             key={r}
-            label={`${r}d`}
+            label={`${r} ימים`}
             selected={range === r}
             onPress={() => {
               setRange(r);
@@ -112,9 +108,9 @@ export default function StatsScreen() {
       </View>
 
       <View style={styles.tiles}>
-        <Tile label="Avg / day" value={withData.length ? m.format(avg) : '—'} />
-        <Tile label="Total" value={metric === 'sleep' ? formatDuration(total * HOUR) : m.format(total)} />
-        {band ? <Tile label="Recommended" value={`${band[0]}–${band[1]}h`} /> : null}
+        <Tile label="ממוצע ליום" value={withData.length ? m.format(avg) : '—'} />
+        <Tile label="סה״כ" value={metric === 'sleep' ? formatDuration(total * HOUR) : m.format(total)} />
+        {band ? <Tile label="מומלץ" value={`${band[0]}-${band[1]} ש׳`} /> : null}
       </View>
 
       <View style={[styles.card, { backgroundColor: p.card, borderColor: p.border }]}>
@@ -127,10 +123,10 @@ export default function StatsScreen() {
           format={m.format}
           average={avg}
           band={band}
-          bandLabel={band ? 'recommended' : undefined}
+          bandLabel={band ? 'טווח מומלץ' : undefined}
         />
         <Pressable onPress={() => setShowTable((v) => !v)} style={styles.tableToggle}>
-          <Text style={[styles.tableToggleText, { color: p.accent }]}>{showTable ? 'Hide table' : 'Show as table'}</Text>
+          <Text style={[styles.tableToggleText, { color: p.accent }]}>{showTable ? 'הסתרת טבלה' : 'הצגה כטבלה'}</Text>
         </Pressable>
         {showTable
           ? [...data].reverse().map((d) => (
@@ -142,7 +138,7 @@ export default function StatsScreen() {
           : null}
       </View>
       {metric === 'sleep' && !profile.birthDate ? (
-        <Text style={[styles.hint, { color: p.muted }]}>Add a birth date in ⚙️ to see the recommended sleep range.</Text>
+        <Text style={[styles.hint, { color: p.muted }]}>הוסיפו תאריך לידה ב-⚙️ כדי לראות את טווח השינה המומלץ.</Text>
       ) : null}
     </ScrollView>
   );
@@ -176,6 +172,6 @@ const styles = StyleSheet.create({
   tableToggleText: { fontSize: 14, fontWeight: '700' },
   tableRow: { flexDirection: 'row', paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth },
   tableCell: { flex: 1, fontSize: 14 },
-  tableValue: { textAlign: 'right', fontWeight: '700', fontVariant: ['tabular-nums'] },
+  tableValue: { textAlign: 'left', fontWeight: '700', fontVariant: ['tabular-nums'] },
   hint: { fontSize: 12, textAlign: 'center', marginTop: 10 },
 });

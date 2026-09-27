@@ -15,9 +15,9 @@ import { useNow } from '../../lib/useNow';
 type Measure = 'weightKg' | 'heightCm' | 'headCm';
 
 const MEASURES: { key: Measure; label: string; unit: string }[] = [
-  { key: 'weightKg', label: 'Weight', unit: 'kg' },
-  { key: 'heightCm', label: 'Height', unit: 'cm' },
-  { key: 'headCm', label: 'Head size', unit: 'cm' },
+  { key: 'weightKg', label: 'משקל', unit: 'ק״ג' },
+  { key: 'heightCm', label: 'גובה', unit: 'ס״מ' },
+  { key: 'headCm', label: 'היקף ראש', unit: 'ס״מ' },
 ];
 
 export default function GrowthScreen() {
@@ -40,26 +40,26 @@ export default function GrowthScreen() {
     <View key={key} style={[styles.tile, { backgroundColor: p.card, borderColor: p.border }]}>
       <Text style={[styles.tileLabel, { color: p.muted }]}>{label}</Text>
       <Text style={[styles.tileValue, { color: p.text }]}>{e ? `${e[key]} ${unit}` : '—'}</Text>
-      <Text style={[styles.tileDate, { color: p.muted }]}>{e ? formatDate(e.start, now) : 'not measured'}</Text>
+      <Text style={[styles.tileDate, { color: p.muted }]}>{e ? formatDate(e.start, now) : 'לא נמדד'}</Text>
     </View>
   );
 
   return (
     <ScrollView style={{ backgroundColor: p.bg }} contentContainerStyle={styles.content}>
       {profile.birthDate ? (
-        <Text style={[styles.age, { color: p.muted }]}>Age: {formatAge(profile.birthDate, now)}</Text>
+        <Text style={[styles.age, { color: p.muted }]}>גיל: {formatAge(profile.birthDate, now)}</Text>
       ) : null}
       <View style={styles.tiles}>
-        {card('Weight', latest.weight, 'weightKg', 'kg')}
-        {card('Height', latest.height, 'heightCm', 'cm')}
-        {card('Head', latest.head, 'headCm', 'cm')}
+        {card('משקל', latest.weight, 'weightKg', 'ק״ג')}
+        {card('גובה', latest.height, 'heightCm', 'ס״מ')}
+        {card('היקף ראש', latest.head, 'headCm', 'ס״מ')}
       </View>
 
       <Pressable
         onPress={() => router.push({ pathname: '/event', params: { type: 'growth' } })}
         style={({ pressed }) => [styles.addBtn, { backgroundColor: tint(color, 0.15), borderColor: color }, pressed && { opacity: 0.7 }]}
       >
-        <Text style={[styles.addText, { color: p.text }]}>📏 Add measurement</Text>
+        <Text style={[styles.addText, { color: p.text }]}>📏 הוספת מדידה</Text>
       </Pressable>
 
       <View style={[styles.card, { backgroundColor: p.card, borderColor: p.border }]}>
@@ -75,14 +75,14 @@ export default function GrowthScreen() {
           </>
         ) : (
           <Text style={[styles.empty, { color: p.muted }]}>
-            {points.length === 1 ? 'Add one more measurement to see a chart.' : `No ${m.label.toLowerCase()} measurements yet.`}
+            {points.length === 1 ? 'הוסיפו עוד מדידה אחת כדי לראות גרף.' : `עדיין אין מדידות של ${m.label}.`}
           </Text>
         )}
       </View>
 
-      <Text style={[styles.section, { color: p.muted }]}>HISTORY</Text>
+      <Text style={[styles.section, { color: p.muted }]}>היסטוריה</Text>
       {history.length === 0 ? (
-        <Text style={[styles.empty, { color: p.muted }]}>Log weight, height and head size after checkups.</Text>
+        <Text style={[styles.empty, { color: p.muted }]}>רשמו משקל, גובה והיקף ראש אחרי ביקורים בטיפת חלב.</Text>
       ) : (
         history.map((e) => (
           <View key={e.id}>
@@ -109,6 +109,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8, marginBottom: 6 },
   unitNote: { fontSize: 13, marginTop: 4 },
   empty: { fontSize: 14, textAlign: 'center', paddingVertical: 24 },
-  section: { fontSize: 13, fontWeight: '700', letterSpacing: 1, marginTop: 22, marginBottom: 6 },
+  section: { fontSize: 13, fontWeight: '700', marginTop: 22, marginBottom: 6 },
   histDate: { fontSize: 12, marginBottom: 4, marginTop: 4 },
 });

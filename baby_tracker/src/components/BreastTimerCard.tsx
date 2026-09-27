@@ -30,11 +30,11 @@ export function BreastTimerCard({ event }: { event: BabyEvent }) {
   const SideButton = ({ side }: { side: Side }) => {
     const running = t.running === side;
     const ms = side === 'left' ? el.left : el.right;
-    const letter = side === 'left' ? 'L' : 'R';
+    const letter = side === 'left' ? 'שמאל' : 'ימין';
     return (
       <Pressable
         onPress={() => toggle(side)}
-        accessibilityLabel={`${running ? 'Pause' : 'Start'} ${side}`}
+        accessibilityLabel={`${running ? 'עצירה' : 'התחלה'} ${side === 'left' ? 'שמאל' : 'ימין'}`}
         style={({ pressed }) => [
           styles.side,
           running ? { backgroundColor: color, borderColor: color } : { borderColor: color, backgroundColor: p.card },
@@ -52,27 +52,27 @@ export function BreastTimerCard({ event }: { event: BabyEvent }) {
   return (
     <View style={[styles.card, { backgroundColor: tint(color, 0.12), borderColor: color }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: p.text }]}>🤱 Breastfeeding</Text>
+        <Text style={[styles.title, { color: p.text }]}>🤱 הנקה</Text>
         <Text style={[styles.total, { color: p.text }]}>{formatClock(el.total)}</Text>
       </View>
       <Text style={[styles.sub, { color: p.muted }]}>
-        Started {formatTime(event.start)} · {t.running ? `on ${t.running} side` : 'paused'}
+        התחלה {formatTime(event.start)} · {t.running ? `צד ${t.running === 'left' ? 'שמאל' : 'ימין'}` : 'מושהה'}
       </Text>
-      <View style={styles.row}>
+      <View style={[styles.row, styles.ltr]}>
         <SideButton side="left" />
         <SideButton side="right" />
       </View>
       <View style={styles.row}>
         <Pressable
           onPress={() =>
-            confirm('Discard this feed?', 'The running timer will be removed.', 'Discard', () => deleteEvent(event.id))
+            confirm('לבטל את ההנקה?', 'הטיימר הפעיל יימחק.', 'ביטול הנקה', () => deleteEvent(event.id))
           }
           style={[styles.secondary, { borderColor: p.border }]}
         >
-          <Text style={[styles.secondaryText, { color: p.muted }]}>Discard</Text>
+          <Text style={[styles.secondaryText, { color: p.muted }]}>ביטול</Text>
         </Pressable>
         <Pressable onPress={finish} style={[styles.finish, { backgroundColor: p.text }]}>
-          <Text style={[styles.finishText, { color: p.bg }]}>■ Finish & save</Text>
+          <Text style={[styles.finishText, { color: p.bg }]}>■ סיום ושמירה</Text>
         </Pressable>
       </View>
     </View>
@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   total: { fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
   sub: { fontSize: 13, marginTop: 2 },
   row: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  ltr: { direction: 'ltr' },
   side: { flex: 1, borderWidth: 2, borderRadius: 16, paddingVertical: 12, alignItems: 'center' },
   sideLabel: { fontSize: 16, fontWeight: '800' },
   sideTime: { fontSize: 20, fontWeight: '700', marginTop: 2, fontVariant: ['tabular-nums'] },

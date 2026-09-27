@@ -10,7 +10,9 @@ export function EventRow({ event, onPress, now }: { event: BabyEvent; onPress: (
   const meta = TYPE_META[event.type];
   const time =
     event.type === 'sleep'
-      ? `${formatTime(event.start)} – ${event.end !== undefined ? formatTime(event.end) : 'now'}`
+      ? event.end !== undefined
+        ? `${formatTime(event.start)}-${formatTime(event.end)}` // no spaces: stays one LTR run in RTL text
+        : `מ-${formatTime(event.start)}`
       : formatTime(event.start);
   const extraNote = event.type !== 'note' && event.note ? event.note : null;
 

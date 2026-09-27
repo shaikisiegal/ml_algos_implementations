@@ -15,7 +15,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: p.accent,
         headerRight: () => (
           <Link href="/settings" asChild>
-            <Pressable accessibilityLabel="Baby profile" hitSlop={12} style={{ marginRight: 16 }}>
+            <Pressable accessibilityLabel="פרופיל התינוק/ת" hitSlop={12} style={{ marginHorizontal: 16 }}>
               <Text style={{ fontSize: 22 }}>⚙️</Text>
             </Pressable>
           </Link>
@@ -24,23 +24,23 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Home', tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
+        options={{ title: 'בית', tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
       />
       <Tabs.Screen
         name="timeline"
-        options={{ title: 'Timeline', tabBarIcon: ({ focused }) => <TabIcon emoji="🕒" focused={focused} /> }}
+        options={{ title: 'ציר זמן', tabBarIcon: ({ focused }) => <TabIcon emoji="🕒" focused={focused} /> }}
       />
       <Tabs.Screen
         name="calendar"
-        options={{ title: 'Calendar', tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
+        options={{ title: 'לוח שנה', tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
       />
       <Tabs.Screen
         name="stats"
-        options={{ title: 'Statistics', tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} /> }}
+        options={{ title: 'סטטיסטיקה', tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} /> }}
       />
       <Tabs.Screen
         name="growth"
-        options={{ title: 'Growth', tabBarIcon: ({ focused }) => <TabIcon emoji="🌱" focused={focused} /> }}
+        options={{ title: 'גדילה', tabBarIcon: ({ focused }) => <TabIcon emoji="🌱" focused={focused} /> }}
       />
     </Tabs>
   );

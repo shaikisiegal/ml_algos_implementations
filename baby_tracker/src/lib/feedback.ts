@@ -18,7 +18,7 @@ export function confirm(title: string, message: string, confirmLabel: string, on
     return;
   }
   Alert.alert(title, message, [
-    { text: 'Cancel', style: 'cancel' },
+    { text: 'ביטול', style: 'cancel' },
     { text: confirmLabel, style: 'destructive', onPress: onConfirm },
   ]);
 }
