@@ -1,0 +1,692 @@
+<meta charset="utf-8">
+<title>קופת הילדים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700&display=swap">
+<style>
+/* Layout: control panel (sticky on wide screens) beside a results column: summary tiles, kid cards, charts, table. RTL. */
+:root {
+  --bg: #f3f6f4;
+  --panel: #ffffff;
+  --ink: #12302a;
+  --ink-2: #4b615b;
+  --muted: #7c8f89;
+  --line: #d9e3df;
+  --soft: #e8efec;
+  --accent: #0d7458;
+  --accent-ink: #ffffff;
+  --good: #1f7a3a;
+  --good-bg: #e3f3e6;
+  --warn: #8a5a00;
+  --warn-bg: #fbefd5;
+  --bad: #b3261e;
+  --bad-bg: #fbe4e2;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+  --f-display: "Secular One", "Assistant", "Arial Hebrew", sans-serif;
+  --f-body: "Assistant", "Segoe UI", "Arial Hebrew", Arial, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1715; --panel: #16211e; --ink: #e6efec; --ink-2: #a9bbb5; --muted: #7f938d;
+    --line: #2a3a36; --soft: #1d2b27; --accent: #3fbf96; --accent-ink: #062018;
+    --good: #6fd08c; --good-bg: #173322; --warn: #f0be5a; --warn-bg: #3a2c0e; --bad: #f08a83; --bad-bg: #3d1916;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1715; --panel: #16211e; --ink: #e6efec; --ink-2: #a9bbb5; --muted: #7f938d;
+  --line: #2a3a36; --soft: #1d2b27; --accent: #3fbf96; --accent-ink: #062018;
+  --good: #6fd08c; --good-bg: #173322; --warn: #f0be5a; --warn-bg: #3a2c0e; --bad: #f08a83; --bad-bg: #3d1916;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+.lede { color: var(--ink-2); max-width: 62ch; margin: 6px 0 0; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+
+.grid { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 901px) { .panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; } }
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+legend { font-family: var(--f-display); font-size: 1.05rem; padding: 0; margin-bottom: 8px; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 0.9rem; }
+label.f small { font-weight: 400; color: var(--muted); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+input[type="number"], input[type="text"], select {
+  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; width: 100%; min-width: 0;
+}
+input[type="number"] { font-variant-numeric: tabular-nums; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1; font: inherit; font-size: 0.88rem; padding: 7px 6px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.radios { display: flex; flex-direction: column; gap: 6px; }
+.radios label { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+.radios label:has(input:checked) { border-color: var(--accent); background: var(--soft); }
+.radios input { accent-color: var(--accent); margin-top: 4px; }
+.radios b { display: block; }
+.radios span { color: var(--ink-2); font-size: 0.83rem; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.kid-row { display: grid; grid-template-columns: 10px minmax(0, 1.3fr) 64px minmax(0, 1.4fr) 30px; gap: 6px; align-items: center; }
+.kid-row .dot { width: 10px; height: 10px; border-radius: 50%; }
+.kid-head { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.02em; }
+.icon-btn { font: inherit; width: 30px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink-2); cursor: pointer; }
+.icon-btn:hover { color: var(--bad); border-color: var(--bad); }
+.btn { font: inherit; font-weight: 600; padding: 8px 12px; border-radius: 8px; border: 1px dashed var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.btn:hover { background: var(--soft); }
+.track-row { display: grid; grid-template-columns: minmax(0, 1.6fr) 70px 70px 30px; gap: 6px; align-items: center; }
+
+.results { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { padding: 14px 16px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 0.8rem; color: var(--ink-2); letter-spacing: 0.02em; }
+.tile .v { font-family: var(--f-display); font-size: 1.55rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 0.82rem; color: var(--muted); }
+.tile.hero { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tile.hero .k, .tile.hero .s { color: var(--accent-ink); opacity: 0.85; }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.pill.good { background: var(--good-bg); color: var(--good); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+
+.kids { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.kid { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.kid-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kid-name { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-size: 1.1rem; }
+.kid-name i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.kid .big { font-family: var(--f-display); font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kid dl { display: grid; grid-template-columns: auto auto; gap: 3px 10px; margin: 0; font-size: 0.86rem; }
+.kid dt { color: var(--ink-2); }
+.kid dd { margin: 0; text-align: left; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--soft); display: flex; overflow: hidden; gap: 2px; }
+.bar span { display: block; height: 100%; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card-head p { margin: 0; color: var(--ink-2); font-size: 0.88rem; }
+.chart-box { position: relative; height: 320px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 1100px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.86rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+.legend i.sq { width: 10px; height: 10px; border-radius: 3px; }
+
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8rem; }
+td.n { font-variant-numeric: tabular-nums; text-align: left; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.base td { background: var(--soft); font-weight: 700; }
+
+.notes { display: flex; flex-direction: column; gap: 8px; }
+.note { padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; }
+.note.warn { background: var(--warn-bg); color: var(--warn); }
+.note.info { background: var(--soft); color: var(--ink-2); }
+details.how { color: var(--ink-2); font-size: 0.9rem; }
+details.how summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+details.how p { max-width: 75ch; }
+.foot { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="he">
+  <header>
+    <div>
+      <h1>קופת הילדים</h1>
+      <p class="lede">מחשבון לתכנון השקעה משותפת לכמה ילדים בגילים שונים. מחלקים סכום חד־פעמי והפקדה חודשית כך שכל ילד יגיע לגיל היעד עם אותו סכום.</p>
+    </div>
+    <button class="btn" id="reset" type="button">איפוס לדוגמה</button>
+  </header>
+
+  <div class="grid">
+    <!-- ===== Controls ===== -->
+    <form class="panel" id="form" autocomplete="off">
+      <fieldset>
+        <legend>כסף</legend>
+        <label class="f">סכום חד־פעמי כולל (₪)
+          <input type="number" id="lump" min="0" step="1000" inputmode="numeric">
+        </label>
+        <label class="f">הפקדה חודשית כוללת (₪)
+          <input type="number" id="monthly" min="0" step="50" inputmode="numeric">
+          <small>סך ההפקדה לכל הילדים יחד, לפני חלוקה</small>
+        </label>
+        <label class="f">סכום יעד לכל ילד (₪)
+          <input type="number" id="goal" min="0" step="5000" inputmode="numeric">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>מתי</legend>
+        <div class="seg" role="group" aria-label="סוג אופק">
+          <button type="button" id="modeAge" aria-pressed="true">בגיל יעד</button>
+          <button type="button" id="modeYears" aria-pressed="false">בעוד X שנים</button>
+        </div>
+        <label class="f" id="ageWrap">גיל יעד: <span class="num" id="targetAgeOut"></span>
+          <input type="range" id="targetAge" min="12" max="30" step="1">
+          <small>כל ילד מגיע לגיל הזה בשנה אחרת, וההפקדות שלו נמשכות עד אז</small>
+        </label>
+        <label class="f" id="yearsWrap" hidden>בעוד כמה שנים: <span class="num" id="yearsOut"></span>
+          <input type="range" id="years" min="1" max="40" step="1">
+          <small>כל הילדים מקבלים את הכסף באותו מועד</small>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>ילדים</legend>
+        <div class="kid-row kid-head"><span></span><span>שם</span><span>גיל</span><span>מסלול</span><span></span></div>
+        <div id="kidsList" class="notes"></div>
+        <button class="btn" type="button" id="addKid">+ הוספת ילד</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>מסלולי השקעה</legend>
+        <div class="track-row kid-head"><span>מסלול</span><span>תשואה %</span><span>דמי ניהול %</span><span></span></div>
+        <div id="tracksList" class="notes"></div>
+        <button class="btn" type="button" id="addTrack">+ מסלול</button>
+        <small style="color:var(--muted)">תשואה שנתית ממוצעת משוערת. דמי הניהול מנוכים מהצבירה מדי שנה.</small>
+      </fieldset>
+
+      <fieldset>
+        <legend>איך לאזן</legend>
+        <div class="radios" id="strategy">
+          <label><input type="radio" name="strategy" value="prop"><div><b>איזון מלא</b><span>חד־פעמי וחודשי מחולקים באותו יחס. תמיד אפשרי.</span></div></label>
+          <label><input type="radio" name="strategy" value="eqMonthly"><div><b>חודשי שווה, החד־פעמי מאזן</b><span>כל ילד מקבל אותה הפקדה חודשית; הגדולים מקבלים יותר מהחד־פעמי.</span></div></label>
+          <label><input type="radio" name="strategy" value="eqLump"><div><b>חד־פעמי שווה, החודשי מאזן</b><span>החד־פעמי מתחלק שווה; הגדולים מקבלים הפקדה חודשית גבוהה יותר.</span></div></label>
+          <label><input type="radio" name="strategy" value="naive"><div><b>בלי איזון (להשוואה)</b><span>חלוקה שווה של הכל. מראה כמה הפער גדל.</span></div></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>מס ואינפלציה</legend>
+        <label class="check"><input type="checkbox" id="tax"> מס רווח הון בעת משיכה</label>
+        <div class="row2">
+          <label class="f">שיעור מס %<input type="number" id="taxRate" min="0" max="50" step="1"></label>
+          <label class="f">אינפלציה שנתית %<input type="number" id="infl" min="0" max="15" step="0.1"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="real"> להציג בכוח קנייה של היום</label>
+        <small style="color:var(--muted)">כשהאפשרות מסומנת, האיזון נעשה בכוח קנייה: ילד שמגיע ליעד מאוחר יותר יקבל יותר שקלים, באותו ערך ריאלי.</small>
+      </fieldset>
+    </form>
+
+    <!-- ===== Results ===== -->
+    <main class="results">
+      <div class="tiles" id="tiles"></div>
+      <div class="notes" id="warnings"></div>
+      <div class="kids" id="kidCards"></div>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>צמיחת החיסכון לאורך הזמן</h2>
+          <p id="growthSub"></p>
+        </div>
+        <div class="legend" id="growthLegend"></div>
+        <div class="chart-box"><canvas id="growth" aria-label="גרף צמיחת החיסכון לכל ילד" role="img"></canvas></div>
+      </section>
+
+      <div class="two">
+        <section class="card">
+          <div class="card-head"><h2>מה מרכיב את הסכום</h2><p>הפקדות מול רווחים, לכל ילד</p></div>
+          <div class="legend" id="compLegend"></div>
+          <div class="chart-box" style="height:260px"><canvas id="comp" aria-label="פירוק הסכום הסופי לכל ילד" role="img"></canvas></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>כמה צריך כדי להגיע ליעד</h2><p id="needSub"></p></div>
+          <div class="tbl-wrap"><table id="needTbl"></table></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><h2>תוכנית החלוקה</h2><p>כמה להפקיד לכל ילד</p></div>
+        <div class="tbl-wrap"><table id="planTbl"></table></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>מה אם התשואה תהיה אחרת</h2><p>אותה חלוקה, תשואה שונה בכל המסלולים</p></div>
+        <div class="tbl-wrap"><table id="sensTbl"></table></div>
+      </section>
+
+      <details class="how">
+        <summary>איך מחושב האיזון</summary>
+        <p>לכל ילד מחשבים שני מקדמים לפי מספר החודשים עד היעד והתשואה נטו של המסלול: מקדם צמיחה לשקל שהופקד היום, ומקדם צבירה להפקדה חודשית של שקל. הסכום הסופי של כל ילד הוא חד־פעמי × מקדם צמיחה + חודשי × מקדם צבירה. האיזון פותר את המשוואות כך שהסכום הסופי שווה לכולם וסך ההפקדות שווה למה שהזנתם.</p>
+        <p>מס רווח הון ואינפלציה נכנסים לאותם מקדמים, כך שהשוויון נשמר גם אחרי מס ובכוח קנייה. ההפקדות לילד מסתיימות כשהוא מגיע ליעד, ולכן ההפקדה החודשית בפועל יורדת בהדרגה. הנחות התשואה הן ממוצע משוער ולא תחזית; זה מחשבון לתכנון, לא ייעוץ השקעות.</p>
+      </details>
+      <p class="foot">הנתונים נשמרים רק בדפדפן שלך.</p>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(() => {
+  const STORE = "kids-invest-v1";
+  const DEFAULTS = {
+    lump: 100000, monthly: 1500, goal: 300000,
+    mode: "age", targetAge: 18, years: 15,
+    strategy: "prop", tax: true, taxRate: 25, infl: 2.5, real: false,
+    tracks: [
+      { id: "t1", name: "מניות – S&P 500", ret: 8, fee: 0.6 },
+      { id: "t2", name: "כללי", ret: 5.5, fee: 0.7 },
+      { id: "t3", name: "סולידי / אג״ח", ret: 3.5, fee: 0.5 }
+    ],
+    kids: [
+      { name: "ילד א׳", age: 0, track: "t1" },
+      { name: "ילד ב׳", age: 4, track: "t1" },
+      { name: "ילד ג׳", age: 7, track: "t1" }
+    ]
+  };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  let S;
+  try { S = JSON.parse(localStorage.getItem(STORE)) || clone(DEFAULTS); } catch { S = clone(DEFAULTS); }
+  S = Object.assign(clone(DEFAULTS), S);
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} };
+
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const seriesColor = i => css(`--s${(i % 6) + 1}`);
+  const ILS = new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 });
+  const fmt = v => ILS.format(Math.round(v || 0));
+  const short = v => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return "₪" + (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + "M";
+    if (a >= 1e3) return "₪" + Math.round(v / 1e3) + "K";
+    return "₪" + Math.round(v);
+  };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  /* ---------- Math ---------- */
+  // Per kid: N months, monthly net rate, and effective factors G (per ₪ of lump) and A (per ₪/month)
+  // after optional tax on gains and optional deflation to today's money.
+  function kidFactors(kid, retShift = 0) {
+    const tr = S.tracks.find(t => t.id === kid.track) || S.tracks[0];
+    const years = S.mode === "age" ? S.targetAge - kid.age : S.years;
+    const N = Math.max(0, Math.round(years * 12));
+    const annual = (tr ? tr.ret - tr.fee : 0) + retShift;
+    const rm = Math.pow(1 + annual / 100, 1 / 12) - 1;
+    const g = Math.pow(1 + rm, N);
+    const a = Math.abs(rm) < 1e-12 ? N : (g - 1) / rm;
+    const t = S.tax ? S.taxRate / 100 : 0;
+    // tax only on positive gains; for typical inputs gain >= 0
+    let G = (1 - t) * g + t, A = (1 - t) * a + t * N;
+    if (g < 1) { G = g; A = a; }
+    const I = S.real ? Math.pow(1 + S.infl / 100, years) : 1;
+    return { years, N, rm, g, a, G: G / I, A: A / I, I, track: tr, annual };
+  }
+
+  // Returns lump_i, monthly_i for each kid under the chosen strategy.
+  function allocate(F, L, M, strategy) {
+    const k = F.length;
+    if (!k) return [];
+    if (strategy === "naive") return F.map(() => ({ l: L / k, m: M / k }));
+    if (strategy === "eqMonthly") {
+      const m = M / k;
+      const sInvG = F.reduce((s, f) => s + 1 / f.G, 0);
+      const sAG = F.reduce((s, f) => s + f.A / f.G, 0);
+      const V = (L + m * sAG) / sInvG;
+      return F.map(f => ({ l: (V - m * f.A) / f.G, m }));
+    }
+    if (strategy === "eqLump") {
+      const l = L / k;
+      const withA = F.filter(f => f.A > 0);
+      if (!withA.length) return F.map(() => ({ l, m: 0 }));
+      const sInvA = withA.reduce((s, f) => s + 1 / f.A, 0);
+      const sGA = withA.reduce((s, f) => s + f.G / f.A, 0);
+      const V = (M + l * sGA) / sInvA;
+      return F.map(f => ({ l, m: f.A > 0 ? (V - l * f.G) / f.A : 0 }));
+    }
+    // prop: same weight on lump and monthly, w_i ∝ 1 / (L·G_i + M·A_i)
+    const K = F.map(f => L * f.G + M * f.A);
+    if (K.some(x => x <= 0)) return F.map(() => ({ l: L / k, m: M / k }));
+    const inv = K.map(x => 1 / x), s = inv.reduce((a, b) => a + b, 0);
+    return inv.map(x => ({ l: L * x / s, m: M * x / s }));
+  }
+
+  // Simulate one kid month by month; returns yearly nominal balances and final numbers.
+  function simulate(f, l, m) {
+    let bal = l, dep = l;
+    const pts = [{ y: 0, v: l }];
+    for (let i = 1; i <= f.N; i++) {
+      bal = bal * (1 + f.rm) + m; dep += m;
+      if (i % 12 === 0 || i === f.N) pts.push({ y: i / 12, v: bal });
+    }
+    const gain = bal - dep;
+    const tax = S.tax ? Math.max(0, gain) * S.taxRate / 100 : 0;
+    return { pts, gross: bal, dep, gain, tax, net: bal - tax };
+  }
+
+  const finalOf = (f, x) => x.l * f.G + x.m * f.A;
+  const minFinal = (F, L, M, strat) => {
+    const al = allocate(F, L, M, strat);
+    return Math.min(...F.map((f, i) => finalOf(f, al[i])));
+  };
+  // Solve for the smallest value of one input (lump or monthly) that brings every kid to the goal.
+  function solveFor(which, F, goal, strat) {
+    const val = x => which === "monthly" ? minFinal(F, S.lump, x, strat) : minFinal(F, x, S.monthly, strat);
+    if (val(0) >= goal) return 0;
+    let hi = 1000;
+    while (val(hi) < goal && hi < 1e10) hi *= 2;
+    if (hi >= 1e10) return NaN;
+    let lo = 0;
+    for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; val(mid) >= goal ? hi = mid : lo = mid; }
+    return hi;
+  }
+
+  /* ---------- Controls ---------- */
+  function bindNumber(id, key) {
+    const el = $(id);
+    el.value = S[key];
+    el.addEventListener("input", () => { const v = parseFloat(el.value); S[key] = isFinite(v) ? Math.max(0, v) : 0; update(); });
+  }
+  bindNumber("lump", "lump"); bindNumber("monthly", "monthly"); bindNumber("goal", "goal");
+  bindNumber("taxRate", "taxRate"); bindNumber("infl", "infl");
+  $("tax").checked = S.tax; $("tax").addEventListener("change", e => { S.tax = e.target.checked; update(); });
+  $("real").checked = S.real; $("real").addEventListener("change", e => { S.real = e.target.checked; update(); });
+  $("targetAge").value = S.targetAge;
+  $("targetAge").addEventListener("input", e => { S.targetAge = +e.target.value; update(); });
+  $("years").value = S.years;
+  $("years").addEventListener("input", e => { S.years = +e.target.value; update(); });
+  const setMode = m => {
+    S.mode = m;
+    $("modeAge").setAttribute("aria-pressed", m === "age");
+    $("modeYears").setAttribute("aria-pressed", m === "years");
+    $("ageWrap").hidden = m !== "age"; $("yearsWrap").hidden = m !== "years";
+  };
+  $("modeAge").addEventListener("click", () => { setMode("age"); update(); });
+  $("modeYears").addEventListener("click", () => { setMode("years"); update(); });
+  setMode(S.mode);
+  document.querySelectorAll('input[name="strategy"]').forEach(r => {
+    r.checked = r.value === S.strategy;
+    r.addEventListener("change", () => { S.strategy = r.value; update(); });
+  });
+  $("form").addEventListener("submit", e => e.preventDefault());
+
+  function renderKidInputs() {
+    $("kidsList").innerHTML = S.kids.map((k, i) => `
+      <div class="kid-row">
+        <span class="dot" style="background:${seriesColor(i)}"></span>
+        <input type="text" id="kn${i}" value="${esc(k.name)}" aria-label="שם הילד">
+        <input type="number" id="ka${i}" value="${k.age}" min="0" max="40" step="0.5" aria-label="גיל">
+        <select id="kt${i}" aria-label="מסלול">${S.tracks.map(t => `<option value="${t.id}" ${t.id === k.track ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>
+        <button type="button" class="icon-btn" data-del="${i}" aria-label="הסרת ${esc(k.name)}" ${S.kids.length <= 1 ? "disabled" : ""}>✕</button>
+      </div>`).join("");
+    S.kids.forEach((k, i) => {
+      $("kn" + i).addEventListener("input", e => { k.name = e.target.value || `ילד ${i + 1}`; update(false); });
+      $("ka" + i).addEventListener("input", e => { const v = parseFloat(e.target.value); k.age = isFinite(v) ? Math.max(0, v) : 0; update(false); });
+      $("kt" + i).addEventListener("change", e => { k.track = e.target.value; update(false); });
+    });
+    $("kidsList").querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => {
+      S.kids.splice(+b.dataset.del, 1); renderKidInputs(); update(false);
+    }));
+  }
+  function renderTrackInputs() {
+    $("tracksList").innerHTML = S.tracks.map((t, i) => `
+      <div class="track-row">
+        <input type="text" id="tn${i}" value="${esc(t.name)}" aria-label="שם המסלול">
+        <input type="number" id="tr${i}" value="${t.ret}" step="0.1" aria-label="תשואה שנתית">
+        <input type="number" id="tf${i}" value="${t.fee}" step="0.05" min="0" aria-label="דמי ניהול">
+        <button type="button" class="icon-btn" data-deltrack="${i}" aria-label="הסרת מסלול" ${S.tracks.length <= 1 ? "disabled" : ""}>✕</button>
+      </div>`).join("");
+    S.tracks.forEach((t, i) => {
+      $("tn" + i).addEventListener("input", e => { t.name = e.target.value; renderKidInputs(); update(false); });
+      $("tr" + i).addEventListener("input", e => { t.ret = parseFloat(e.target.value) || 0; update(false); });
+      $("tf" + i).addEventListener("input", e => { t.fee = parseFloat(e.target.value) || 0; update(false); });
+    });
+    $("tracksList").querySelectorAll("[data-deltrack]").forEach(b => b.addEventListener("click", () => {
+      const [gone] = S.tracks.splice(+b.dataset.deltrack, 1);
+      S.kids.forEach(k => { if (k.track === gone.id) k.track = S.tracks[0].id; });
+      renderTrackInputs(); renderKidInputs(); update(false);
+    }));
+  }
+  $("addKid").addEventListener("click", () => {
+    S.kids.push({ name: `ילד ${S.kids.length + 1}`, age: 0, track: S.tracks[0].id });
+    renderKidInputs(); update(false);
+  });
+  $("addTrack").addEventListener("click", () => {
+    S.tracks.push({ id: "t" + Date.now(), name: "מסלול חדש", ret: 6, fee: 0.5 });
+    renderTrackInputs(); renderKidInputs(); update(false);
+  });
+  $("reset").addEventListener("click", () => {
+    S = clone(DEFAULTS);
+    ["lump", "monthly", "goal", "taxRate", "infl", "targetAge", "years"].forEach(k => $(k).value = S[k]);
+    $("tax").checked = S.tax; $("real").checked = S.real; setMode(S.mode);
+    document.querySelectorAll('input[name="strategy"]').forEach(r => r.checked = r.value === S.strategy);
+    renderTrackInputs(); renderKidInputs(); update();
+  });
+
+  /* ---------- Charts ---------- */
+  let growthChart, compChart;
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+
+  function chartTheme() {
+    return { ink: css("--ink"), ink2: css("--ink-2"), muted: css("--muted"), line: css("--line"), panel: css("--panel"), soft: css("--soft") };
+  }
+  function tooltipBase(th) {
+    return { rtl: true, textDirection: "rtl", backgroundColor: th.panel, titleColor: th.ink, bodyColor: th.ink, borderColor: th.line, borderWidth: 1, padding: 10, boxPadding: 4, usePointStyle: true };
+  }
+
+  function drawGrowth(rows) {
+    const th = chartTheme();
+    const maxY = Math.max(1, ...rows.map(r => r.f.years));
+    const labels = Array.from({ length: Math.ceil(maxY) + 1 }, (_, i) => i);
+    const thisYear = new Date().getFullYear();
+    const deflate = (v, y) => S.real ? v / Math.pow(1 + S.infl / 100, y) : v;
+    const datasets = rows.map(r => ({
+      label: r.kid.name,
+      data: r.sim.pts.map(p => ({ x: p.y, y: deflate(p.v, p.y) })),
+      borderColor: r.color, backgroundColor: r.color, borderWidth: 2, tension: 0.25,
+      pointRadius: ctx => ctx.dataIndex === r.sim.pts.length - 1 ? 5 : 0,
+      pointHoverRadius: 5, pointBorderColor: th.panel, pointBorderWidth: 2
+    }));
+    if (S.goal > 0) {
+      datasets.push({ label: "יעד", data: [{ x: 0, y: S.goal }, { x: maxY, y: S.goal }], borderColor: th.muted, borderDash: [6, 5], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0 });
+    }
+    const cfg = {
+      type: "line",
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: "index", intersect: false, axis: "x" },
+        parsing: false,
+        scales: {
+          x: { type: "linear", min: 0, max: maxY, reverse: true,
+               ticks: { color: th.muted, stepSize: maxY > 20 ? 5 : 2, callback: v => `${thisYear + v}` },
+               grid: { color: th.line, drawTicks: false }, border: { display: false } },
+          y: { position: "right", beginAtZero: true, ticks: { color: th.muted, callback: v => short(v), maxTicksLimit: 6 },
+               grid: { color: th.line }, border: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: Object.assign(tooltipBase(th), {
+            filter: it => it.dataset.label !== "יעד",
+            callbacks: {
+              title: it => it.length ? `שנת ${thisYear + Math.round(it[0].parsed.x)} (בעוד ${Math.round(it[0].parsed.x)} שנים)` : "",
+              label: it => ` ${it.dataset.label}: ${fmt(it.parsed.y)}`
+            }
+          })
+        }
+      }
+    };
+    cfg.options.interaction = { mode: "nearest", axis: "x", intersect: false };
+    cfg.options.plugins.tooltip.mode = "x";
+    if (growthChart) growthChart.destroy();
+    growthChart = new Chart($("growth"), cfg);
+    $("growthLegend").innerHTML = rows.map(r => `<span><i style="background:${r.color}"></i>${esc(r.kid.name)}</span>`).join("") +
+      (S.goal > 0 ? `<span><i style="background:repeating-linear-gradient(90deg,${th.muted} 0 5px,transparent 5px 8px)"></i>יעד</span>` : "");
+    $("growthSub").textContent = (S.real ? "בכוח קנייה של היום" : "בשקלים נומינליים") + ", לפני מס";
+  }
+
+  function drawComp(rows) {
+    const th = chartTheme();
+    const c = { lump: css("--s1"), mon: css("--s3"), gain: css("--s4"), tax: th.muted };
+    const deflate = r => S.real ? r.f.I : 1;
+    const ds = [
+      { label: "חד־פעמי", data: rows.map(r => r.alloc.l / deflate(r)), backgroundColor: c.lump },
+      { label: "הפקדות חודשיות", data: rows.map(r => r.alloc.m * r.f.N / deflate(r)), backgroundColor: c.mon },
+      { label: "רווח נטו", data: rows.map(r => (r.sim.gain - r.sim.tax) / deflate(r)), backgroundColor: c.gain }
+    ];
+    if (S.tax) ds.push({ label: "מס", data: rows.map(r => r.sim.tax / deflate(r)), backgroundColor: c.tax });
+    ds.forEach(d => Object.assign(d, { borderColor: th.panel, borderWidth: { left: 2, right: 0, top: 0, bottom: 0 }, borderRadius: 3, borderSkipped: false, barThickness: 22 }));
+    if (compChart) compChart.destroy();
+    compChart = new Chart($("comp"), {
+      type: "bar",
+      data: { labels: rows.map(r => r.kid.name), datasets: ds },
+      options: {
+        indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: { stacked: true, reverse: true, ticks: { color: th.muted, callback: v => short(v), maxTicksLimit: 5 }, grid: { color: th.line }, border: { display: false } },
+          y: { stacked: true, position: "right", ticks: { color: th.ink }, grid: { display: false }, border: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: Object.assign(tooltipBase(th), { mode: "index", callbacks: { label: it => ` ${it.dataset.label}: ${fmt(it.parsed.x)}` } })
+        }
+      }
+    });
+    $("compLegend").innerHTML = ds.map(d => `<span><i class="sq" style="background:${d.backgroundColor}"></i>${d.label}</span>`).join("");
+  }
+
+  /* ---------- Main update ---------- */
+  function update(rerenderInputs = false) {
+    if (rerenderInputs) { renderTrackInputs(); renderKidInputs(); }
+    $("targetAgeOut").textContent = S.targetAge;
+    $("yearsOut").textContent = S.years;
+    save();
+
+    const warnings = [];
+    const all = S.kids.map((kid, i) => ({ kid, i, color: seriesColor(i), f: kidFactors(kid) }));
+    const done = all.filter(r => r.f.N <= 0);
+    const rows = all.filter(r => r.f.N > 0);
+    done.forEach(r => warnings.push({ warn: true, text: `${r.kid.name} כבר בגיל היעד או מעליו ולכן לא נכלל בחלוקה.` }));
+
+    if (!rows.length) {
+      $("tiles").innerHTML = ""; $("kidCards").innerHTML = "";
+      $("warnings").innerHTML = `<div class="note warn">אין ילדים עם זמן השקעה עד היעד. הגדילו את גיל היעד או את מספר השנים.</div>`;
+      return;
+    }
+
+    const F = rows.map(r => r.f);
+    const alloc = allocate(F, S.lump, S.monthly, S.strategy);
+    if (alloc.some(a => a.l < -0.5 || a.m < -0.5)) {
+      warnings.push({ warn: true, text: S.strategy === "eqMonthly"
+        ? "עם הפקדה חודשית שווה, הסכום החד־פעמי לא מספיק כדי לאזן: הילד הצעיר כבר מקבל יותר מדי מההפקדות החודשיות. נסו להגדיל את החד־פעמי או לבחור ״איזון מלא״."
+        : "עם חד־פעמי שווה, אי אפשר לאזן רק בעזרת ההפקדה החודשית (יוצאת שלילית לאחד הילדים). נסו להגדיל את ההפקדה החודשית או לבחור ״איזון מלא״." });
+    }
+    rows.forEach((r, j) => { r.alloc = alloc[j]; r.sim = simulate(r.f, alloc[j].l, alloc[j].m); r.final = finalOf(r.f, alloc[j]); });
+
+    const unit = S.real ? "בכוח קנייה של היום" : "בשקלים של אותה שנה";
+    const afterTax = S.tax ? "אחרי מס" : "לפני מס";
+    const finals = rows.map(r => r.final);
+    const minF = Math.min(...finals), maxF = Math.max(...finals);
+    const totalDep = rows.reduce((s, r) => s + r.sim.dep, 0);
+    const totalNet = rows.reduce((s, r) => s + r.final, 0);
+    const needM = solveFor("monthly", F, S.goal, S.strategy);
+    const gap = maxF - minF;
+    const reached = minF >= S.goal - 0.5;
+
+    $("tiles").innerHTML = `
+      <div class="tile hero"><span class="k">${S.strategy === "naive" ? "טווח לילד" : "כל ילד יקבל"} (${afterTax})</span>
+        <span class="v num">${S.strategy === "naive" || gap > 1 ? `${short(minF)}–${short(maxF)}` : fmt(minF)}</span>
+        <span class="s">${unit}</span></div>
+      <div class="tile"><span class="k">מול היעד</span>
+        <span class="v num">${S.goal > 0 ? Math.round(minF / S.goal * 100) + "%" : "—"}</span>
+        <span class="s">${S.goal > 0 ? (reached ? `<span class="pill good">✓ היעד הושג</span>` : `<span class="pill ${minF / S.goal > 0.8 ? "warn" : "bad"}">חסרים ${short(S.goal - minF)} לילד</span>`) : "לא הוגדר יעד"}</span></div>
+      <div class="tile"><span class="k">סה״כ הפקדות</span>
+        <span class="v num">${short(totalDep)}</span>
+        <span class="s">נומינלי, לכל הילדים</span></div>
+      <div class="tile"><span class="k">חודשי נדרש ליעד</span>
+        <span class="v num">${S.goal <= 0 ? "—" : isNaN(needM) ? "לא ניתן" : needM === 0 ? "₪0" : fmt(needM)}</span>
+        <span class="s">${S.goal <= 0 ? "" : needM === 0 ? "החד־פעמי לבדו מספיק" : `בנוסף ל־${short(S.lump)} חד־פעמי`}</span></div>`;
+
+    if (S.mode === "age" && rows.length > 1 && S.monthly > 0) {
+      warnings.push({ warn: false, text: "ההפקדה החודשית לכל ילד נעצרת כשהוא מגיע לגיל היעד, ולכן הסכום החודשי הכולל קטן עם השנים. הפירוט בטבלת החלוקה." });
+    }
+    $("warnings").innerHTML = warnings.map(w => `<div class="note ${w.warn ? "warn" : "info"}">${esc(w.text)}</div>`).join("");
+
+    const thisYear = new Date().getFullYear();
+    $("kidCards").innerHTML = rows.map(r => {
+      const pct = S.goal > 0 ? r.final / S.goal : 1;
+      const pill = S.goal <= 0 ? "" : pct >= 0.999 ? `<span class="pill good">✓ ביעד</span>` : `<span class="pill ${pct > 0.8 ? "warn" : "bad"}">${Math.round(pct * 100)}% מהיעד</span>`;
+      const I = S.real ? r.f.I : 1;
+      const parts = [[r.alloc.l / I, css("--s1")], [r.alloc.m * r.f.N / I, css("--s3")], [(r.sim.gain - r.sim.tax) / I, css("--s4")]].map(([v, c]) => [Math.max(0, v), c]);
+      const tot = parts.reduce((s, p) => s + p[0], 0) || 1;
+      return `<article class="kid">
+        <div class="kid-top"><span class="kid-name"><i style="background:${r.color}"></i>${esc(r.kid.name)}</span>${pill}</div>
+        <div class="big">${fmt(r.final)}</div>
+        <div class="bar" aria-hidden="true">${parts.map(([v, c]) => `<span style="width:${v / tot * 100}%;background:${c}"></span>`).join("")}</div>
+        <dl>
+          <dt>גיל היום → ביעד</dt><dd><span class="num">${r.kid.age} → ${+(r.kid.age + r.f.years).toFixed(1)}</span></dd>
+          <dt>שנת היעד</dt><dd>${thisYear + Math.round(r.f.years)} (${+r.f.years.toFixed(1)} שנים)</dd>
+          <dt>חד־פעמי</dt><dd>${fmt(r.alloc.l)}</dd>
+          <dt>הפקדה חודשית</dt><dd>${fmt(r.alloc.m)}</dd>
+          <dt>מסלול</dt><dd><bdi>${esc(r.f.track ? r.f.track.name : "")}</bdi></dd>
+          <dt>מכפיל על ההפקדות</dt><dd>×${(r.sim.net / Math.max(1, r.sim.dep)).toFixed(2)}</dd>
+        </dl>
+      </article>`;
+    }).join("");
+
+    // Plan table
+    $("planTbl").innerHTML = `<thead><tr><th>ילד</th><th>שנים</th><th>מסלול (נטו)</th><th>חד־פעמי</th><th>% מהחד־פעמי</th><th>חודשי</th><th>% מהחודשי</th><th>סה״כ הפקדות</th><th>צבירה לפני מס</th><th>${S.tax ? "מס" : ""}</th><th>ביעד (${afterTax}${S.real ? ", ריאלי" : ""})</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><span class="kid-name" style="font-family:var(--f-body);font-size:inherit"><i style="background:${r.color}"></i>${esc(r.kid.name)}</span></td>
+        <td class="n">${+r.f.years.toFixed(1)}</td>
+        <td>${esc(r.f.track ? r.f.track.name : "")} <span class="num" style="color:var(--muted)">${r.f.annual.toFixed(2)}%</span></td>
+        <td class="n">${fmt(r.alloc.l)}</td>
+        <td class="n">${S.lump > 0 ? (r.alloc.l / S.lump * 100).toFixed(1) + "%" : "—"}</td>
+        <td class="n">${fmt(r.alloc.m)}</td>
+        <td class="n">${S.monthly > 0 ? (r.alloc.m / S.monthly * 100).toFixed(1) + "%" : "—"}</td>
+        <td class="n">${fmt(r.sim.dep)}</td>
+        <td class="n">${fmt(r.sim.gross)}</td>
+        <td class="n">${S.tax ? fmt(r.sim.tax) : ""}</td>
+        <td class="n"><b>${fmt(r.final)}</b></td></tr>`).join("")}</tbody>`;
+
+    // Needs table: what it takes to hit the goal
+    const needL = solveFor("lump", F, S.goal, S.strategy);
+    const needMOnly = (() => { const keep = S.lump; S.lump = 0; const v = solveFor("monthly", F, S.goal, S.strategy); S.lump = keep; return v; })();
+    const needLOnly = (() => { const keep = S.monthly; S.monthly = 0; const v = solveFor("lump", F, S.goal, S.strategy); S.monthly = keep; return v; })();
+    const cell = v => isNaN(v) ? "לא ניתן" : fmt(v);
+    $("needSub").textContent = S.goal > 0 ? `יעד ${fmt(S.goal)} לכל ילד, ${afterTax}` : "הגדירו סכום יעד";
+    $("needTbl").innerHTML = S.goal <= 0 ? "" : `<thead><tr><th>אם…</th><th>צריך</th></tr></thead><tbody>
+      <tr><td>נשאיר את החד־פעמי (${short(S.lump)})</td><td class="n">${cell(needM)} לחודש</td></tr>
+      <tr><td>נשאיר את החודשי (${short(S.monthly)})</td><td class="n">${cell(needL)} חד־פעמי</td></tr>
+      <tr><td>רק הפקדה חודשית, בלי חד־פעמי</td><td class="n">${cell(needMOnly)} לחודש</td></tr>
+      <tr><td>רק חד־פעמי, בלי חודשי</td><td class="n">${cell(needLOnly)} היום</td></tr></tbody>`;
+
+    // Sensitivity
+    const shifts = [-3, -2, -1, 0, 1, 2];
+    $("sensTbl").innerHTML = `<thead><tr><th>שינוי בתשואה</th>${rows.map(r => `<th>${esc(r.kid.name)}</th>`).join("")}<th>מול היעד (הנמוך)</th></tr></thead><tbody>${shifts.map(sh => {
+      const vals = rows.map(r => finalOf(kidFactors(r.kid, sh), r.alloc));
+      const lo = Math.min(...vals), pct = S.goal > 0 ? lo / S.goal : 1;
+      const pill = S.goal <= 0 ? "" : `<span class="pill ${pct >= 0.999 ? "good" : pct > 0.8 ? "warn" : "bad"}">${Math.round(pct * 100)}%</span>`;
+      return `<tr class="${sh === 0 ? "base" : ""}"><td class="n">${sh === 0 ? "התרחיש שלכם" : (sh > 0 ? "+" : "") + sh + "%"}</td>${vals.map(v => `<td class="n">${fmt(v)}</td>`).join("")}<td>${pill}</td></tr>`;
+    }).join("")}</tbody>`;
+
+    drawGrowth(rows);
+    drawComp(rows);
+  }
+
+  renderTrackInputs(); renderKidInputs(); update();
+
+  // Redraw on theme change so chart colors follow the tokens.
+  const rerender = () => { renderKidInputs(); update(); };
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch {}
+  new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
